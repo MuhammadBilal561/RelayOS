@@ -1,0 +1,96 @@
+{
+  "name": "RelayOS — Booking Confirmation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "relay-booking-created",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook_trigger",
+      "name": "RelayOS Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 340],
+      "webhookId": "relay-booking-created"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack_text",
+              "name": "slack_text",
+              "type": "string",
+              "value": "=📅 New booking: {{$json[\"payload\"][\"summary\"]}} at {{$json[\"payload\"][\"startIso\"]}}"
+            },
+            {
+              "id": "customer_email",
+              "name": "customer_email",
+              "type": "string",
+              "value": "={{$json[\"payload\"][\"leadEmail\"] || \"\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format_message",
+      "name": "Format Messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [460, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_SLACK_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"text\": $json[\"slack_text\"] } }}",
+        "options": {}
+      },
+      "id": "slack_notify",
+      "name": "Notify Owner on Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer REPLACE_WITH_RESEND_API_KEY" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"from\": \"bookings@yourdomain.com\", \"to\": $json[\"customer_email\"], \"subject\": \"You're booked!\", \"text\": \"See you at your appointment. Reply to this email if you need to reschedule.\" } }}",
+        "options": {}
+      },
+      "id": "email_customer",
+      "name": "Email Booking Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 460]
+    }
+  ],
+  "connections": {
+    "RelayOS Webhook": {
+      "main": [[{ "node": "Format Messages", "type": "main", "index": 0 }]]
+    },
+    "Format Messages": {
+      "main": [
+        [
+          { "node": "Notify Owner on Slack", "type": "main", "index": 0 },
+          { "node": "Email Booking Confirmation", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,0 +1,2 @@
+DOCKERD_FAILED
+nohup: can't execute 'dockerd': No such file or directory

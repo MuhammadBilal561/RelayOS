@@ -1,0 +1,7 @@
+=== recalculateLeadScore replication ===
+lead:
+visitorMessages count:
+visitorMessages:
+urgencyDetected:
+computed score (would be persisted):
+persisted:

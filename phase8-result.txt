@@ -1,0 +1,31 @@
+Phase 8 — Test Coverage
+========================
+Status: PASS
+
+Checked:
+  - Full suite run via `npm test` (vitest).
+  - Coverage of the four gap areas identified at planning time:
+      (a) lib/current-business.ts ............ lib/current-business.test.ts (6 tests)
+      (b) lib/conversations.ts ............... lib/conversations.test.ts  (7 tests, pre-existing/verified)
+      (c) lib/google-calendar.ts ............. lib/google-calendar.test.ts (7 tests)
+      (d) API route handlers ................. app/api/widget/message/route.test.ts (8 tests)
+                                            app/api/v1/businesses/switch/route.test.ts (3 tests)
+
+Found:
+  - 13 test files, 96 tests, ALL PASSING.
+  - Baseline was 62 tests; 96 > 62, so the target is met.
+  - The stderr lines seen during the run are intentional negative-test
+    logging (e.g. "Widget key not found: nope", "insert failed") emitted by
+    tests that assert error/graceful-degradation paths pass through.
+
+Fixed:
+  - Added new test files for the previously-uncovered modules/handlers:
+      lib/current-business.test.ts
+      lib/google-calendar.test.ts
+      app/api/widget/message/route.test.ts
+      app/api/v1/businesses/switch/route.test.ts
+  - conversations.test.ts confirmed complete (getBusinessByWidgetKey,
+    getOrCreateConversation, getConversationHistory).
+
+Remaining:
+  - None blocking. Total tests 96 (target was >62).

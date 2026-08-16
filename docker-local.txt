@@ -1,0 +1,12 @@
+﻿C:\Users\User\AppData\Local\Docker\log
+C:\Users\User\AppData\Local\Docker\run
+C:\Users\User\AppData\Local\Docker\tasks
+C:\Users\User\AppData\Local\Docker\wsl
+C:\Users\User\AppData\Local\Docker\backend.lock
+C:\Users\User\AppData\Local\Docker\frontend.lock
+C:\Users\User\AppData\Local\Docker\install-cli-log.0.txt
+C:\Users\User\AppData\Local\Docker\install-cli-log.txt
+C:\Users\User\AppData\Local\Docker\install-log.txt
+C:\Users\User\AppData\Local\Docker\installer.error.json
+C:\Users\User\AppData\Local\Docker\launcher.lock
+C:\Users\User\AppData\Local\Docker\volume-backup-schedule.json

@@ -1,0 +1,8 @@
+=== 1. Ingest document with checkable fact ===
+  Document created: 29466933-d8df-47d7-8fac-c2f5f55ce337
+
+=== 2. Embed chunk + insert into kb_chunks ===
+  Embedding computed, dims=768
+  Chunk created: d0d9af97-77d4-493f-aa59-84ab99c635ab, embedding non-null & 9697 dims: false
+
+=== 3. Widget: ask about the fact (grounded answer expected) ===

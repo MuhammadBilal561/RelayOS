@@ -1,0 +1,29 @@
+npm notice run relay-os@0.1.0 test
+npm notice run vitest run
+
+ RUN  v4.1.10 C:/Users/User/Downloads/relay-os (1)/relay-os
+
+ ❯ lib/conversations.test.ts (7 tests | 1 failed) 62ms
+     × creates a lead and a conversation on the visitor's first message 34ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/conversations.test.ts > getOrCreateConversation > creates a lead and a conversation on the visitor's first message
+Error: Failed to create lead: undefined
+ ❯ Module.getOrCreateConversation lib/conversations.ts:41:34
+     39|       .select("id, status")
+     40|       .single();
+     41|     if (error || !newLead) throw new Error(`Failed to create lead: ${e…
+       |                                  ^
+     42|     lead = newLead;
+     43|   }
+ ❯ lib/conversations.test.ts:88:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 7 passed (8)
+      Tests  1 failed | 68 passed (69)
+   Start at  07:37:14
+   Duration  3.83s (transform 3.09s, setup 0ms, import 7.62s, tests 457ms, environment 3ms)
+

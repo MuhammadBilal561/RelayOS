@@ -1,0 +1,21 @@
+=== 1. Investigate lead 7e5361d9 (visitorMsgs=5, score=0) ===
+  lead: 7e5361d9-dd89-4e7b-a12a-d7698a79fc1e
+    business=679f7f98-96a3-4ab8-b3f8-23b25d1dcc27 source=widget
+    status=new score=0
+    last_scored_at=null created_at=2026-08-02T03:25:34.421861+00:00
+  conversations: 1
+    conv=d3cea414-7501-478c-b71a-636fe3ca3ddf status=open
+      [visitor @ 2026-08-02T03:25:35.4464+00:00] pricing
+      [visitor @ 2026-08-02T03:27:36.483488+00:00] pricing
+      [visitor @ 2026-08-02T03:31:22.722422+00:00] pricing
+      [visitor @ 2026-08-02T03:32:45.534875+00:00] pricing
+      [visitor @ 2026-08-02T03:33:59.793395+00:00] pricing
+
+=== 2. Live urgency-language test (widget API) ===
+  baseline score after neutral msg: 0
+  score after urgent msg: 35
+  urgency increased score: YES
+  score after name+email+interest+urgency: 70
+Fatal: ReferenceError: writeFileSync is not defined
+    at main (file:///C:/Users/User/Downloads/relay-os/relay-os/scripts/phase5-urgency-test.mjs:95:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

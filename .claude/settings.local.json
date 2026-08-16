@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(cmd //c \"taskkill /F /PID 7324 /PID 13256 /PID 26208 /PID 20476 /PID 29612 /PID 24228\")",
+      "Bash(cmd //c \"taskkill /F /PID 9268\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -i \"http://localhost:3000/api/integrations/google-calendar/callback?error=access_denied&state=test\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/widget/message -H \"Content-Type: application/json\" -d \"{\\\\\"widgetKey\\\\\":\\\\\"demo-widget-key\\\\\",\\\\\"sessionId\\\\\":\\\\\"phase4-smoke-$\\(date +%s\\)\\\\\",\\\\\"message\\\\\":\\\\\"Can I book a 30-minute slot tomorrow at 2 PM?\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/widget/message -H \"Content-Type: application/json\" -d '{\"widgetKey\":\"76aff119d8ac26a2b3a6e7fe956e3947\",\"sessionId\":\"phase4-real-biz\",\"message\":\"Can I book a 30 minute slot tomorrow at 2pm? Please confirm with my name Jane Doe and email jane@example.com\"}')",
+      "Bash(npx vitest *)",
+      "Bash(awk -F= '{print $1, length\\($2\\)>0 ? \"[set]\" : \"[EMPTY]\"}' .env.local)",
+      "Bash(awk -F= '{print $1}')",
+      "Bash(sed 's/=$//')",
+      "Bash(awk -F= '!/^#/ && NF>1 {v=$2; gsub\\(/^[ \\\\t]+|[ \\\\t]+$/,\"\",v\\); print $1\" len=\"length\\(v\\)}' .env.local)",
+      "Bash(npm ci *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(psql \"postgresql://postgres:postgres@localhost:5432/postgres\" -c \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;\")",
+      "Bash(npx supabase *)",
+      "Bash(npx next *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/organizations/provision -H \"Content-Type: application/json\" -d '{\"name\":\"Test Org\",\"public_widget_key\":\"demo-widget-key\",\"business_name\":\"Test Business\"}')"
+    ]
+  }
+}

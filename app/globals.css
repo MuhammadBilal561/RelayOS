@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-space-grotesk: "Space Grotesk", system-ui, sans-serif;
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-plex-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-paper-50 text-ink-900 font-sans antialiased;
+}
+
+/* Signature element: the "signal strip" — a row of small status dots
+   used across the dashboard to show live conversation state. See
+   components/dashboard/signal-strip.tsx */
+.signal-dot {
+  @apply inline-block h-2 w-2 rounded-full;
+}
+
+.signal-dot--live {
+  @apply bg-relay-500;
+  box-shadow: 0 0 0 3px rgba(47, 191, 113, 0.18);
+}
+
+.signal-dot--thinking {
+  @apply bg-signal-500;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.signal-dot--escalated {
+  @apply bg-alert-500;
+}
+
+.signal-dot--idle {
+  @apply bg-ink-700/30;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-dot--thinking {
+    animation: none;
+  }
+}
+
+::selection {
+  background-color: rgba(242, 169, 59, 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid #F2A93B;
+  outline-offset: 2px;
+}

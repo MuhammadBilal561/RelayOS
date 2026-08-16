@@ -1,0 +1,16 @@
+Test user: phase2-1786152490825@test.local (org bea43cd0-ff33-4665-be3d-eabd299db1a5)
+Sign-in OK.
+
+=== 1. Read seed business (different org) — expect 0 rows ===
+  rows=0 error=none
+  Isolated (cannot read other org's business): true
+
+=== 2. Read seed-org leads — expect 0 rows ===
+  rows=0 error=none
+  Isolated (cannot read other org's leads): true
+
+=== 3. Read own-org businesses — expect >= 1 row ===
+  rows=2 error=none
+  Can read own org: true
+
+TENANT ISOLATION: PASS

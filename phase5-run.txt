@@ -1,0 +1,51 @@
+=== 1. leads.score (non-zero, consistent with signals) ===
+  lead=135517bd-b228-4000-9e26-c44cfb313088 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=2
+  lead=7e5361d9-dd89-4e7b-a12a-d7698a79fc1e status=new score=0 MISMATCH (expected 10)
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=5
+  lead=2684235a-432a-4245-a753-28706cdb061e status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=2
+  lead=dcd6c8b0-76e6-4397-aaf5-8d743a3f4e33 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=0226d1e9-ceda-43cd-a6a0-a352745c012e status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=d4cf478a-7279-49d4-80a8-c1d1b5eff2e8 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=a3ac33c8-482e-41d2-8cad-621bd4fa4df1 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=d2f99285-06c2-44ce-900e-599b06aea2d4 status=escalated score=50 OK
+    name=yes email=yes phone=no interest=yes urgency=false visitorMsgs=1
+  lead=58b31d9e-3cc6-46a1-8c33-907b76c7b2eb status=booked score=50 OK
+    name=yes email=yes phone=no interest=yes urgency=false visitorMsgs=1
+  lead=1ae6005c-8d5d-4f28-a6e6-0745802c6c53 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=640a5b26-b561-43d0-9704-a2762e787379 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=5c146073-8686-48cf-9db7-23170dadf745 status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=29d47c98-9f59-4eb4-b7d2-72243f3e259e status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=47c03329-9b41-4dd4-99bf-c6b8838e1e3c status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+  lead=4cdb72ee-2c73-49d6-a579-2edb0e4fda5c status=new score=0 OK
+    name=no email=no phone=no interest=no urgency=false visitorMsgs=1
+
+=== 2. detectUrgency on visitor messages ===
+  Total visitor messages scanned: 21
+
+=== 3. escalation state (status='escalated' + summary_text) ===
+  lead=d2f99285-06c2-44ce-900e-599b06aea2d4 business=00000000-0000-0000-0000-000000000002 name=Jane Doe status=escalated score=50
+    conv=cd1c1eb9-6cf1-45fb-98f4-9e8d80654695 status=open summary_text non-null+non-empty: false
+    conv=4a62b99d-7ef3-4497-b602-0d48b1dfdfb1 status=open summary_text non-null+non-empty: false
+    conv=51ec0411-ed81-463b-8fd0-49cf827381a8 status=open summary_text non-null+non-empty: false
+    conv=eb37414c-93fb-4db5-8edb-0fd12db18115 status=open summary_text non-null+non-empty: false
+    conv=a4fc3684-db44-47e4-8682-18e22c8ee297 status=escalated summary_text non-null+non-empty: true
+      summary="Jane Doe wants to book an appointment for August 4, 2026, at 2:00 PM UTC and can be reached at jane@example.com."
+    conv=29b141dc-4f7b-45c7-b8e6-851a6b3fbe5b status=open summary_text non-null+non-empty: false
+    conv=61392ab8-73a5-43a6-aa8c-96ad1a1f600b status=open summary_text non-null+non-empty: false
+    conv=387042bc-736e-4490-97c0-8fc0dd693fcc status=open summary_text non-null+non-empty: false
+    conv=2013f24b-3131-48b1-8173-451afc47fc0b status=open summary_text non-null+non-empty: false
+    conv=78d44b8f-8f50-47a8-8690-480406db2ca7 status=open summary_text non-null+non-empty: false
+    conv=d199e341-c487-42a9-a3d6-b01df711ef62 status=open summary_text non-null+non-empty: false
+
+Results written to phase5-result.txt

@@ -1,0 +1,20 @@
+npm notice run relay-os@0.1.0 npx
+npm notice run vitest run lib/automation-events.test.ts --reporter=verbose
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mC:/Users/User/Downloads/relay-os/relay-os[39m
+
+[90mstderr[2m | lib/automation-events.test.ts[2m > [22m[2memitAutomationEvent[2m > [22m[2mnever throws even if the initial insert fails
+[22m[39mFailed to record automation event lead.qualified: insert failed
+
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22malways records the event in automation_events, even with no webhook configured[32m 23[2mms[22m[39m
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22mdoes not attempt delivery when no webhook URL is configured[32m 3[2mms[22m[39m
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22mPOSTs the event to the configured webhook and marks it delivered on success[32m 14[2mms[22m[39m
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22mrecords a delivery_error instead of throwing when the webhook returns a non-2xx status[32m 6[2mms[22m[39m
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22mrecords a delivery_error instead of throwing when the webhook is unreachable[32m 6[2mms[22m[39m
+ [32m✓[39m lib/automation-events.test.ts[2m > [22memitAutomationEvent[2m > [22mnever throws even if the initial insert fails[32m 4[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 05:50:44
+[2m   Duration [22m 3.55s[2m (transform 306ms, setup 0ms, import 412ms, tests 63ms, environment 123ms)[22m
+

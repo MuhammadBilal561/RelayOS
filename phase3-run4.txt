@@ -1,0 +1,19 @@
+=== 1. Ingest document with checkable fact ===
+  Document created: b87bc811-71dd-4ddb-a84d-3e80af984eac
+
+=== 2. Embed chunk + insert into kb_chunks ===
+  Embedding computed, dims=768
+  Chunk created: 1cb2c368-b592-4ebd-ba3a-1581192d7a4a, embedding non-null & 9697 dims: false
+
+=== 3. Widget: ask about the fact (grounded answer expected) ===
+  HTTP 200
+  Reply: The Phase3 Test Package costs exactly $499, and it includes a full system inspection along with one filter replacement. Let me know if you'd like to schedule one or if you have any other questions!
+  Mentions $499 / Phase3: YES (grounded)
+
+=== 4. Widget: ask something NOT in the KB (must refuse) ===
+  HTTP 200
+  Reply: I can't help with questions outside of our HVAC and air services, but I'd be happy to connect you with our team if you need assistance with heating or cooling!
+  Refusal signal: YES
+  Hallucinated (said Paris): NO (good)
+
+Results written to phase3-result.txt

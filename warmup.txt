@@ -1,0 +1,2 @@
+status 200
+{"reply":"Hello! Welcome to Aurora HVAC & Air. How can I help you with your heating or cooling needs today?","conversationId":"4e1d58c1-3501-4d38-84a3-80e2f08476e2","leadId":"a3454bae-b019-4f94-8b4d-047f9ee45ada","score":0,"escalated":false}
