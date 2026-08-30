@@ -1,0 +1,48 @@
+Phase 9 — Frontend punch list
+=============================
+Reported as a punch list (not a single pass/fail).
+
+[OK] 1. Loading / disabled states on forms during fetch
+      - Login (app/(auth)/login/page.tsx): loading -> "Logging in…" disabled button.
+      - Signup (app/(auth)/signup/page.tsx): loading -> "Setting up…" disabled button.
+      - AddBusinessForm (components/dashboard/add-business-form.tsx): saving -> "Creating…".
+      - AutomationWebhookForm (components/dashboard/automation-webhook-form.tsx): saving -> "Saving…".
+      - KnowledgeBaseUploader (components/dashboard/kb-uploader.tsx): submitting -> "Embedding…".
+      All set saving=true BEFORE the async call and expose a visible disabled state.
+      No form was found missing this.
+
+[OK] 2. Empty states
+      - Inbox: "No conversations yet — open the widget ... show up here in real time."
+      - Leads: each pipeline column shows a dashed-border "Empty" placeholder when zero leads.
+      - Bookings: "No bookings yet ..." AND "No calendar connected yet" when no calendar.
+
+[FIXED] 3. Widget auto-scroll with long conversations
+      - components/widget/chat-widget.tsx previously ALWAYS scrolled to bottom on every
+        message change, which yanks the viewport away from a user reading history.
+      - Fixed: auto-scroll now only fires when the user is already within 80px of the
+        bottom (autoScrollThreshold). Scrolled-up reading isn't disturbed.
+
+[OK] 4. Widget iframe sizing on small mobile viewports
+      - public/embed.js sets the panel iframe with
+        max-width:calc(100vw - 32px) and max-height:calc(100vh - 120px),
+        so it scales down on small screens and never overflows the viewport.
+      - Bubble is bottom:20px/right:20px; panel renders above it.
+
+[OK] 5. Color contrast — signal-500 amber
+      - tailwind.config.ts documents: signal-500 (#F2A93B) is for use ON DARK (ink-950)
+        surfaces (buttons/badges); signal-600 (#A05A00) passes WCAG AA (5.31:1 on white)
+        and is the intended TEXT color on white/paper.
+      - Verified usages: text-signal-500 is ONLY used on the landing page (app/page.tsx),
+        whose base bg is ink-950/dark sections — amber-on-dark has high contrast.
+      - text-signal-600 is used for all "text on white" links (bookings, overview, settings),
+        which is the AA-compliant choice.
+      - No text-signal-500 on a light background exists. Constructive neither needed.
+
+[OK][DEFERRED] 6. `next lint` warnings
+      - FOUND: ESLint is NOT configured in this project. `next lint` enters its
+        interactive first-run setup prompt ("How would you like to configure ESLint?").
+      - This means lint cannot run non-interactively as a gate. next build still succeeds
+        (Next 14 does not require ESLint config to build).
+      - DEFERRED: configuring ESLint is out of scope for this runbook pass and needs a
+        human decision (create .eslintrc with "Strict" or "Base" presets). No lint
+        warnings can be reported until it is configured.

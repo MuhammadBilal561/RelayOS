@@ -1,0 +1,85 @@
+npm notice run relay-os@0.1.0 test
+npm notice run vitest run
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mc:/Users/User/Downloads/relay-os/relay-os[39m
+
+ [31m❯[39m lib/rate-limit.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/conversations.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/automation-events.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/ai/tools.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/analytics.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/scoring.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/ai/prompts.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [31m❯[39m lib/rag/ingest.test.ts [2m([22m[2m0 test[22m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 8 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m lib/analytics.test.ts[2m [ lib/analytics.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'config')[39m
+[90m [2m❯[22m lib/analytics.test.ts:[2m9:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/automation-events.test.ts[2m [ lib/automation-events.test.ts ][22m
+[31m[1mError[22m: Vitest failed to find the runner. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+[39m
+[90m [2m❯[22m lib/automation-events.test.ts:[2m29:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/conversations.test.ts[2m [ lib/conversations.test.ts ][22m
+[31m[1mError[22m: Vitest failed to find the runner. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+[39m
+[90m [2m❯[22m lib/conversations.test.ts:[2m43:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/rate-limit.test.ts[2m [ lib/rate-limit.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'config')[39m
+[90m [2m❯[22m lib/rate-limit.test.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/scoring.test.ts[2m [ lib/scoring.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'config')[39m
+[90m [2m❯[22m lib/scoring.test.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/rag/ingest.test.ts[2m [ lib/rag/ingest.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'config')[39m
+[90m [2m❯[22m lib/rag/ingest.test.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/ai/prompts.test.ts[2m [ lib/ai/prompts.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'config')[39m
+[90m [2m❯[22m lib/ai/prompts.test.ts:[2m11:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m lib/ai/tools.test.ts[2m [ lib/ai/tools.test.ts ][22m
+[31m[1mError[22m: Vitest failed to find the runner. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+[39m
+[90m [2m❯[22m lib/ai/tools.test.ts:[2m47:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m8 failed[39m[22m[90m (8)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 08:55:53
+[2m   Duration [22m 9.56s[2m (transform 8.08s, setup 0ms, import 0ms, tests 0ms, environment 4ms)[22m
+

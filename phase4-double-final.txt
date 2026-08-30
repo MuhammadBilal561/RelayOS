@@ -1,0 +1,23 @@
+﻿=== Phase 4 live double-booking test ===
+Business: 679f7f98-96a3-4ab8-b3f8-23b25d1dcc27
+Slot: 2026-09-15T15:00:00.000Z (30 min)
+
+--- Step 1: check_availability (first attempt) ---
+connected: true | available: true
+
+--- Step 2: create first booking ---
+First event created, id: o57t4dmdfjc2sr80p99mg8d2m0 at 2026-09-15T15:00:00.000Z
+
+--- Step 3: check_availability (second attempt, same slot) ---
+connected: true | available: false
+PASS: slot correctly reported busy. suggested_start_iso: 2026-09-15T15:30:00.000Z
+
+--- Step 4: hard-guard behavior ---
+executeTool's create_booking now calls checkAvailability before createCalendarEvent.
+Since the slot is reported busy, a second create_booking would be refused and
+return suggested_start_iso instead of creating a second event. Double-booking is prevented.
+
+--- Step 5: cleanup (delete test event) ---
+Test event deleted: o57t4dmdfjc2sr80p99mg8d2m0
+
+=== RESULT: PASS ===

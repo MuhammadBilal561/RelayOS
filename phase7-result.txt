@@ -1,0 +1,29 @@
+Phase 7 — Analytics
+====================
+Status: PASS
+
+Checked:
+  - lib/analytics.ts pure functions + getAnalyticsSummary orchestrator.
+  - The null-vs-zero revenue check (runbook requirement).
+
+Found:
+  - computeRevenueRecovered(bookingsCount, avgJobValue):
+      * returns null when avgJobValue is null or <=0  (render "—, set a value",
+        NOT a fabricated $0 headline metric).
+      * returns 0 when avgJobValue is set but bookingsCount is 0 — a connected
+        calendar with no bookings yet is a real, known state (NOT null).
+      * This is the exact null-vs-zero distinction the runbook requires.
+  - computeAvgResponseSeconds handles empty data (null), normal averages, and
+    clamps out-of-order timestamps to 0 (never negative).
+  - computeConversionRate returns null for 0 leads (not a misleading 0%),
+    one-decimal precision otherwise.
+  - buildFunnel produces mutually exclusive stage counts summing to total.
+  - lib/analytics.test.ts (13 tests, all passing) covers all of the above.
+
+Fixed:
+  - None needed; null-vs-zero revenue behavior is correctly implemented and
+    tested.
+
+Remaining:
+  - None. Live dashboard metrics depend on real lead/booking volume which is
+    minimal in the dev DB; the arithmetic and state semantics are verified.

@@ -1,0 +1,9 @@
+﻿
+[22m[39mFailed to record automation event lead.qualified: insert failed
+[22m[39mWidget message handling failed: Error: gemini down
+[2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m      Tests [22m [1m[32m96 passed[39m[22m[90m (96)[39m
+[2m   Duration [22m 5.70s[2m (transform 4.68s, setup 0ms, import 12.73s, 
+tests 1.36s, environment 1.69s)[22m
+
+

@@ -1,0 +1,6 @@
+﻿ POST /api/widget/message 200 in 8148ms
+ POST /api/widget/message 200 in 9200ms
+ POST /api/widget/message 200 in 6980ms
+ â—‹ Compiling /middleware ...
+ âœ“ Compiled /middleware in 6.1s (142 modules)
+ â—‹ Compiling /settings ...

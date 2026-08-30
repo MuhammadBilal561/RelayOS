@@ -1,0 +1,82 @@
+{
+  "name": "RelayOS — Escalation Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "relay-lead-escalated",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook_trigger",
+      "name": "RelayOS Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "webhookId": "relay-lead-escalated"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Verify RelayOS webhook signature\n// Requires credential: relayOsWebhookSecret (per-business secret)\n\nconst signature = $request.headers[\"x-relayos-signature\"];\nconst timestamp = $request.headers[\"x-relayos-timestamp\"];\nconst nonce = $request.headers[\"x-relayos-nonce\"];\nconst rawBody = $request.rawBody;\n\n// 1. Check required headers exist\nif (!signature || !timestamp || !nonce) {\n  throw new Error(\"Missing RelayOS signature headers (x-relayos-signature, x-relayos-timestamp, x-relayos-nonce)\");\n}\n\n// 2. Check signature format\nif (!signature.startsWith(\"v1=\")) {\n  throw new Error(\"Invalid signature format: must start with 'v1='\");\n}\n\n// 3. Parse timestamp safely\nconst requestTime = parseInt(timestamp, 10);\nif (isNaN(requestTime)) {\n  throw new Error(\"Invalid timestamp: not a number\");\n}\n\n// 4. Check timestamp drift (5 minutes = 300 seconds)\nconst now = Math.floor(Date.now() / 1000);\nif (Math.abs(now - requestTime) > 300) {\n  throw new Error(\"Timestamp out of acceptable range (replay protection: 5 minutes)\");\n}\n\n// 5. Raw body must exist\nif (rawBody === undefined || rawBody === null) {\n  throw new Error(\"Missing raw request body for signature verification\");\n}\n\n// 6. Reconstruct canonical string EXACTLY: timestamp.nonce.rawBody\nconst canonical = `${timestamp}.${nonce}.${rawBody}`;\n\n// 7. Get per-business secret from n8n Credentials\nconst secret = $credentials.relayOsWebhookSecret;\nif (!secret) {\n  throw new Error(\"Per-business webhook secret not configured in credentials\");\n}\n\n// 8. Compute expected signature\nconst crypto = require('crypto');\nconst expectedSignature = 'v1=' + crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n\n// 9. Timing-safe comparison\nconst sigBuffer = Buffer.from(signature, 'utf8');\nconst expectedBuffer = Buffer.from(expectedSignature, 'utf8');\nif (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {\n  throw new Error(\"Invalid signature\");\n}\n\n// 10. Verification passed - pass through original payload unchanged\nreturn [{ json: $json }];",
+        "options": {}
+      },
+      "id": "verify_signature",
+      "name": "Verify RelayOS Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "relayOsWebhookSecret": "relayOsWebhookSecret"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack_text",
+              "name": "text",
+              "type": "string",
+              "value": "=🚨 A visitor needs a human — {{$json[\"payload\"][\"reason\"]}}\nSummary: {{$json[\"payload\"][\"summary\"]}}\nConversation: {{$json[\"payload\"][\"conversationId\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format_message",
+      "name": "Format Slack Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/REPLACE/WITH/YOUR_SLACK_WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"text\": $json[\"text\"] } }}",
+        "options": {}
+      },
+      "id": "slack_notify",
+      "name": "Notify Owner on Slack (urgent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "RelayOS Webhook": {
+      "main": [[{ "node": "Verify RelayOS Signature", "type": "main", "index": 0 }]]
+    },
+    "Verify RelayOS Signature": {
+      "main": [[{ "node": "Format Slack Message", "type": "main", "index": 0 }]]
+    },
+    "Format Slack Message": {
+      "main": [[{ "node": "Notify Owner on Slack (urgent)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

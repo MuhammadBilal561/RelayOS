@@ -1,0 +1,16 @@
+﻿=== 1. Ingest document with checkable fact ===
+  Document created: 00a15125-9348-4036-a66c-72c9dbf8fcc9
+
+=== 2. Embed chunk + insert into kb_chunks ===
+  Embedding computed, dims=768
+  Chunk created: 2a66ee24-0d3b-47ad-9022-f7c38b7a9ff8, embedding non-null & 9697 dims: false
+
+=== 3. Widget: ask about the fact (grounded answer expected) ===
+Fatal: [TypeError: fetch failed] {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1339:18)
+      at afterConnectMultiple (node:net:1942:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
