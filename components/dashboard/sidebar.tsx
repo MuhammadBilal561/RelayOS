@@ -2,10 +2,25 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Inbox, LayoutGrid, BookOpen, Calendar, BarChart3, Settings, Users, LogOut, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Inbox,
+  LayoutGrid,
+  BookOpen,
+  Calendar,
+  BarChart3,
+  Settings,
+  Users,
+  LogOut,
+  ChevronDown,
+  Menu,
+  X,
+  Building2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavigationProvider, usePendingNavigation } from "./navigation-context";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
 
 const primaryNav = [
   { href: "/overview", label: "Overview", icon: LayoutGrid },
@@ -18,31 +33,29 @@ const primaryNav = [
 
 function NavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: React.ElementType; active: boolean }) {
   const isPending = usePendingNavigation(href);
-  const isActive = active;
 
   return (
     <Tooltip content={label} side="right">
       <Link
         href={href}
         title={label}
+        aria-current={active ? "page" : undefined}
         className={cn(
-          "flex items-center justify-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors md:justify-start relative",
-          isActive ? "bg-white/10 text-paper-50" : "text-paper-50/60 hover:bg-white/5 hover:text-paper-50",
-          isPending && "opacity-70"
+          "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
+          active
+            ? "bg-white/[0.08] font-medium text-paper-50"
+            : "text-paper-50/55 hover:bg-white/[0.04] hover:text-paper-50"
         )}
-        onClick={() => {
-          // Navigation will be handled by Next.js Link
-        }}
       >
-        {isPending && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-4 w-4 text-signal-500 animate-spin" aria-hidden="true" />
-          </div>
+        {active && (
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-signal-500"
+          />
         )}
-        <span className="relative z-10">
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="hidden md:inline">{label}</span>
-        </span>
+        <Icon className={cn("h-4 w-4 shrink-0", active ? "text-signal-400" : "text-paper-50/45 group-hover:text-paper-50/70")} />
+        <span className="relative flex-1 truncate text-left">{label}</span>
+        {isPending && <Spinner className="h-3.5 w-3.5 shrink-0 text-signal-400" />}
       </Link>
     </Tooltip>
   );
@@ -57,6 +70,22 @@ interface SidebarProps {
 export function Sidebar({ businessName, businesses, currentBusinessId }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close the mobile drawer when navigation completes.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [mobileOpen]);
 
   function handleSwitch(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
@@ -75,22 +104,34 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
     }
   }
 
-  return (
-    <NavigationProvider>
-      <aside className="fixed top-0 left-0 z-40 flex h-screen w-16 shrink-0 flex-col justify-between border-r border-ink-800/10 bg-ink-950 px-2 py-4 text-paper-50 md:w-60 md:px-3">
-      <div className="overflow-y-auto pr-2 md:pr-0">
-        <div className="mb-3 hidden px-2 md:block">
-          <p className="font-display text-sm font-semibold">RelayOS</p>
-          <p className="mt-0.5 truncate font-mono text-[11px] text-paper-50/50">{businessName}</p>
+  const navContent = (
+    <>
+      <div className="flex-1 overflow-y-auto px-3 pb-4 scroll-thin">
+        <div className="mb-4 mt-5 flex items-center gap-2.5 px-1">
+          <span
+            aria-hidden="true"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal-500/15 text-signal-400"
+          >
+            <span className="font-display text-sm font-bold">R</span>
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-sm font-semibold tracking-tight text-paper-50">RelayOS</p>
+            <p className="truncate font-mono text-[10px] text-paper-50/45">{businessName}</p>
+          </div>
         </div>
 
         {/* Business switcher — agency mode: one login, many client businesses. */}
         {businesses.length > 0 && (
-          <div className="mb-4 hidden px-2 md:block">
+          <div className="relative mb-3 px-1">
+            <Building2
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-paper-50/40"
+            />
             <select
               value={currentBusinessId}
               onChange={handleSwitch}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs text-paper-50 focus-visible:outline-none"
+              aria-label="Switch business"
+              className="w-full appearance-none rounded-lg border border-white/10 bg-white/[0.04] py-1.5 pl-8 pr-7 text-xs text-paper-50/80 transition-colors hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-500/60"
             >
               {businesses.map((b) => (
                 <option key={b.id} value={b.id} className="bg-ink-900 text-paper-50">
@@ -101,14 +142,14 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
                 + Add a business…
               </option>
             </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-paper-50/40"
+            />
           </div>
         )}
 
-        <div className="mb-6 flex justify-center md:hidden">
-          <span className="signal-dot signal-dot--live" />
-        </div>
-
-        <nav className="space-y-0.5">
+        <nav className="space-y-0.5" aria-label="Primary navigation">
           {primaryNav.map((item) => {
             const active = pathname?.startsWith(item.href);
             return (
@@ -124,34 +165,99 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
         </nav>
       </div>
 
-      <div className="flex flex-col gap-1 border-t border-ink-800/10 pt-4">
+      <div className="border-t border-white/[0.06] px-3 pb-4 pt-3">
+        <div className="mb-2 hidden items-center gap-2 px-2.5 py-1 md:flex">
+          <span className="signal-dot signal-dot--live" aria-hidden="true" />
+          <span className="font-mono text-[10px] text-paper-50/40">widget live</span>
+        </div>
         <Link
           href="/settings"
           title="Settings"
+          aria-current={pathname?.startsWith("/settings") ? "page" : undefined}
           className={cn(
-            "flex items-center justify-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors md:justify-start",
+            "mb-0.5 flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
             pathname?.startsWith("/settings")
-              ? "bg-white/10 text-paper-50"
-              : "text-paper-50/50 hover:bg-white/5 hover:text-paper-50"
+              ? "bg-white/[0.08] font-medium text-paper-50"
+              : "text-paper-50/55 hover:bg-white/[0.04] hover:text-paper-50"
           )}
         >
-          <Settings className="h-4 w-4 shrink-0" />
-          <span className="hidden md:inline">Settings</span>
+          <Settings className={cn("h-4 w-4 shrink-0", pathname?.startsWith("/settings") ? "text-signal-400" : "text-paper-50/45")} />
+          Settings
         </Link>
-
         <button
           onClick={handleLogout}
           title="Logout"
-          className={cn(
-            "flex items-center justify-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors md:justify-start",
-            "text-paper-50/50 hover:bg-white/5 hover:text-paper-50"
-          )}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-paper-50/55 transition-colors duration-150 hover:bg-white/[0.04] hover:text-alert-400"
         >
-          <LogOut className="h-4 w-4 shrink-0" />
-          <span className="hidden md:inline">Logout</span>
+          <LogOut className="h-4 w-4 shrink-0 text-paper-50/45" />
+          Logout
         </button>
       </div>
-    </aside>
-  </NavigationProvider>
+    </>
+  );
+
+  return (
+    <NavigationProvider>
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-white/[0.06] bg-ink-950 md:flex">
+        {navContent}
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-ink-900/10 bg-paper-50/85 px-4 backdrop-blur md:hidden">
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal-500/15 text-signal-600"
+          >
+            <span className="font-display text-sm font-bold">R</span>
+          </span>
+          <div className="leading-tight">
+            <p className="font-display text-sm font-semibold tracking-tight text-ink-950">RelayOS</p>
+            <p className="max-w-[40vw] truncate font-mono text-[10px] text-ink-400">{businessName}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-900/10 bg-white text-ink-700 transition-colors hover:bg-paper-50"
+          aria-label="Open navigation menu"
+          aria-expanded={mobileOpen}
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+      </header>
+
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 overflow-hidden transition-opacity duration-200 md:hidden",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        )}
+        aria-hidden={!mobileOpen}
+      >
+        <div
+          className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-ink-950 shadow-float transition-transform duration-300 ease-out",
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="absolute right-3 top-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-paper-50/50 transition-colors hover:bg-white/5 hover:text-paper-50"
+            aria-label="Close navigation menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {navContent}
+        </div>
+      </div>
+    </NavigationProvider>
   );
 }

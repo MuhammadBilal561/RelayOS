@@ -10,22 +10,57 @@
 
 html {
   color-scheme: light;
+  scroll-behavior: smooth;
 }
 
 body {
   @apply bg-paper-50 text-ink-900 font-sans antialiased;
 }
 
-/* Signature element: the "signal strip" — a row of small status dots
-   used across the dashboard to show live conversation state. See
-   components/dashboard/signal-strip.tsx */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+::selection {
+  background-color: rgba(242, 169, 59, 0.3);
+}
+
+/* Consistent keyboard-focus ring across the product */
+:focus-visible {
+  outline: 2px solid rgba(242, 169, 59, 0.9);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Surfaces ---------- */
+
+/* Elevated light surface used for cards, menus, and dialogs */
+.surface {
+  @apply rounded-xl border border-ink-900/[0.08] bg-white shadow-panel;
+}
+
+/* Subtle inset well for code blocks, charts, embedded panels */
+.well {
+  @apply rounded-lg border border-ink-900/[0.06] bg-paper-50;
+}
+
+/* Hairline divider — the one consistent divider used everywhere */
+.divider {
+  @apply border-t border-ink-900/[0.08];
+}
+
+/* ---------- Signature "signal strip" dots ----------
+   A row of small status dots used across the dashboard to show
+   live conversation state. See components/dashboard/signal-strip.tsx */
 .signal-dot {
   @apply inline-block h-2 w-2 rounded-full;
 }
 
 .signal-dot--live {
   @apply bg-relay-500;
-  box-shadow: 0 0 0 3px rgba(47, 191, 113, 0.18);
+  box-shadow: 0 0 0 3px rgba(47, 191, 113, 0.15);
 }
 
 .signal-dot--thinking {
@@ -35,24 +70,14 @@ body {
 
 .signal-dot--escalated {
   @apply bg-alert-500;
+  box-shadow: 0 0 0 3px rgba(239, 91, 91, 0.15);
 }
 
 .signal-dot--idle {
-  @apply bg-ink-700/30;
+  @apply bg-ink-300;
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.55; transform: scale(0.85); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .signal-dot--thinking {
-    animation: none;
-  }
-}
-
-/* Shimmer animation for loading skeletons */
+/* ---------- Loading shimmer ---------- */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -61,123 +86,41 @@ body {
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
+    rgba(23, 27, 35, 0.05) 0%,
+    rgba(23, 27, 35, 0.09) 50%,
+    rgba(23, 27, 35, 0.05) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-shimmer {
-    animation: none;
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
-
-/* Dark sidebar shimmer variant */
+/* Dark-surface shimmer (sidebar skeleton) */
 .bg-ink-800\/30.animate-shimmer,
 .bg-ink-900\/30.animate-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(35, 40, 52, 0.5) 0%,
-    rgba(58, 65, 80, 0.3) 50%,
-    rgba(35, 40, 52, 0.5) 100%
+    rgba(35, 40, 52, 0.6) 0%,
+    rgba(58, 65, 80, 0.4) 50%,
+    rgba(35, 40, 52, 0.6) 100%
   );
   background-size: 200% 100%;
 }
 
-::selection {
-  background-color: rgba(242, 169, 59, 0.35);
-}
-
-:focus-visible {
-  outline: 2px solid #F2A93B;
-  outline-offset: 2px;
-}
-
-/* Hero entrance animations */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fade-in-up {
+/* ---------- Scroll reveal (landing) ---------- */
+@keyframes reveal-up {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.7s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.6s ease-out forwards;
-  opacity: 0;
-}
-
-/* Delay utilities */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
-.delay-600 { animation-delay: 600ms; }
-.delay-700 { animation-delay: 700ms; }
-.delay-800 { animation-delay: 800ms; }
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-fade-in,
-  .animate-fade-in-up,
-  .animate-scale-in {
-    animation: none;
-    opacity: 1;
-  }
-}
-
-/* Scroll-reveal animations */
-@keyframes reveal-up {
-  from { opacity: 0; transform: translateY(32px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes reveal-scale {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
 .reveal-up {
   opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reveal-up.in-view {
   opacity: 1;
   transform: translateY(0);
-}
-
-.reveal-scale {
-  opacity: 0;
-  transform: scale(0.96);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.reveal-scale.in-view {
-  opacity: 1;
-  transform: scale(1);
 }
 
 /* Delay utilities for reveal */
@@ -190,11 +133,58 @@ body {
 .reveal-delay-700 { transition-delay: 700ms; }
 .reveal-delay-800 { transition-delay: 800ms; }
 
+/* ---------- Helpers ---------- */
+
+/* Amber gradient text for hero emphasis */
+.text-gradient-amber {
+  background: linear-gradient(120deg, #F5BE6B 0%, #F2A93B 55%, #E8930E 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Thin scrollbars for dense panels (sidebar, chat) */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(58, 65, 80, 0.35) transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(58, 65, 80, 0.35);
+  border-radius: 9999px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Accessibility: reduce all motion when requested */
 @media (prefers-reduced-motion: reduce) {
-  .reveal-up,
-  .reveal-scale {
+  .signal-dot--thinking,
+  .animate-shimmer {
+    animation: none;
+  }
+
+  .animate-shimmer {
+    background: rgba(23, 27, 35, 0.06);
+  }
+
+  .reveal-up {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-scale-in,
+  .animate-slide-in-right {
+    animation: none;
+    opacity: 1;
   }
 }

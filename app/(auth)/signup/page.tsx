@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Loader2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
+import { AuthShell } from "@/components/auth/auth-shell";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -62,61 +64,59 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper-50 px-6 py-12">
-      <Card className="w-full max-w-sm">
-        <CardContent className="pt-6">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-700/50">RelayOS</p>
-          <h1 className="mt-2 font-display text-2xl font-semibold text-ink-950">Set up your front office</h1>
-          <p className="mt-1 text-sm text-ink-700/70">A couple of minutes, then your AI is live.</p>
+    <AuthShell title="Set up your front office" subtitle="A couple of minutes, then your AI is live.">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Your company / agency name" htmlFor="org" spacing="sm">
+          <Input id="org" required value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} />
+        </Field>
+        <Field label="First client business name" htmlFor="biz" spacing="sm">
+          <Input id="biz" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+        </Field>
+        <Field label="Email" htmlFor="email" spacing="sm">
+          <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+        <Field
+          label="Password"
+          htmlFor="password"
+          spacing="sm"
+          hint="At least 6 characters."
+        >
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-            <div>
-              <label htmlFor="org" className="mb-1.5 block text-xs font-medium text-ink-700">
-                Your company / agency name
-              </label>
-              <Input id="org" required value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="biz" className="mb-1.5 block text-xs font-medium text-ink-700">
-                First client business name
-              </label>
-              <Input id="biz" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-ink-700">
-                Email
-              </label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-ink-700">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            {error && <p className="text-sm text-alert-600">{error}</p>}
-
-            <Button type="submit" variant="signal" className="w-full" disabled={loading}>
-              {loading ? "Setting up…" : "Create account"}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-ink-700/70">
-            Already have an account?{" "}
-            <Link href="/login" className="font-medium text-ink-950 underline underline-offset-4">
-              Log in
-            </Link>
+        {error && (
+          <p role="alert" className="flex items-center gap-1.5 rounded-lg bg-alert-500/10 px-3 py-2 text-sm text-alert-700">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {error}
           </p>
-        </CardContent>
-      </Card>
-    </main>
+        )}
+
+        <Button type="submit" variant="signal" className="w-full" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Setting up…
+            </>
+          ) : (
+            "Create account"
+          )}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-ink-500">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-ink-950 underline underline-offset-4 hover:text-signal-700">
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

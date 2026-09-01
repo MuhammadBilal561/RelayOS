@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { LeadStatus } from "@/types/database";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const columns: { status: LeadStatus; label: string }[] = [
   { status: "new", label: "New" },
@@ -15,10 +19,16 @@ const columns: { status: LeadStatus; label: string }[] = [
 ];
 
 function scoreVariant(score: number) {
-  if (score >= 70) return "live" as const;
-  if (score >= 40) return "thinking" as const;
+  if (score >= 70) return "success" as const;
+  if (score >= 40) return "warning" as const;
   return "neutral" as const;
 }
+
+const scoreBar = {
+  success: "bg-relay-500",
+  warning: "bg-signal-500",
+  neutral: "bg-ink-300",
+};
 
 export default async function LeadsPage() {
   const business = await getCurrentBusiness();
@@ -46,65 +56,110 @@ export default async function LeadsPage() {
     if (!latestConversationByLead.has(c.lead_id)) latestConversationByLead.set(c.lead_id, c.id);
   }
 
-return (
-    <div className="p-6 sm:p-10">
+  const hasAnyLeads = (leads ?? []).length > 0;
+
+  return (
+    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
       <SectionHeader
         eyebrow="Leads"
         title="Pipeline"
         description="Ranked by lead score — a deterministic blend of contact info captured, urgency language detected, and engagement depth. Recalculated after every message, not an LLM self-report."
       />
 
-      <div className="mt-6 overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0 pb-4" role="region" aria-label="Leads pipeline" tabIndex={0}>
-        <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 min-w-max">
-          {columns.map((col) => {
-            const columnLeads = (leads ?? []).filter((l) => l.status === col.status);
-            return (
-              <div key={col.status} className="min-w-[220px]">
-                <div className="mb-2 flex items-center justify-between px-1">
-                  <p className="text-xs font-medium uppercase tracking-wide text-ink-700/50">{col.label}</p>
-                  <span className="font-mono text-[11px] text-ink-700/40">{columnLeads.length}</span>
-                </div>
-
-                <div className="space-y-2">
-                  {columnLeads.map((lead) => {
-                    const conversationId = latestConversationByLead.get(lead.id);
-                    const card = (
-                      <div className="rounded-xl border border-ink-800/10 bg-white p-3 shadow-panel transition-shadow hover:shadow-md">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-ink-900">
-                            {lead.name || lead.email || "Anonymous visitor"}
-                          </p>
-                          <Badge variant={scoreVariant(lead.score)}>{lead.score}</Badge>
-                        </div>
-                        {lead.service_interest && (
-                          <p className="mt-1 truncate text-xs text-ink-700/60">{lead.service_interest}</p>
-                        )}
-                        <p className="mt-2 font-mono text-[10px] text-ink-700/40">
-                          {new Date(lead.created_at).toLocaleDateString()}
+      <div className="mt-6">
+        {!hasAnyLeads ? (
+          <EmptyState
+            icon={Users}
+            title="No leads yet"
+            description="Leads appear here the moment a visitor shares contact info through your widget. Open the live preview and say hello to see the pipeline fill up."
+            action={
+              <Link href="/widget/demo-widget-key" target="_blank" className="text-sm font-medium text-signal-600 hover:text-signal-700">
+                Try the live widget →
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            <div
+              className="overflow-x-auto pb-4 scroll-thin"
+              role="region"
+              aria-label="Leads pipeline"
+              tabIndex={0}
+            >
+              <div className="grid min-w-max grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+                {columns.map((col) => {
+                  const columnLeads = (leads ?? []).filter((l) => l.status === col.status);
+                  return (
+                    <div key={col.status} className="w-[210px]">
+                      <div className="mb-2 flex items-center justify-between px-1">
+                        <p className="text-xs font-medium uppercase tracking-wide text-ink-400">
+                          {col.label}
                         </p>
+                        <span className="rounded-full bg-ink-900/[0.06] px-2 py-0.5 font-mono text-[10px] text-ink-500">
+                          {columnLeads.length}
+                        </span>
                       </div>
-                    );
-                    return conversationId ? (
-                      <Link key={lead.id} href={`/inbox/${conversationId}`} className="block">
-                        {card}
-                      </Link>
-                    ) : (
-                      <div key={lead.id}>{card}</div>
-                    );
-                  })}
-                </div>
 
-                {columnLeads.length === 0 && (
-                  <p className="rounded-xl border border-dashed border-ink-800/15 p-3 text-center text-xs text-ink-700/30">
-                    Empty
-                  </p>
-                )}
+                      <div className="space-y-2">
+                        {columnLeads.map((lead) => {
+                          const conversationId = latestConversationByLead.get(lead.id);
+                          const tone = scoreVariant(lead.score);
+                          const card = (
+                            <div className="group rounded-xl border border-ink-900/[0.08] bg-white p-3 shadow-panel transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-900/[0.14] hover:shadow-panel-hover">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="truncate text-sm font-medium text-ink-900">
+                                  {lead.name || lead.email || "Anonymous visitor"}
+                                </p>
+                                <Badge variant={tone} className="shrink-0">
+                                  {lead.score}
+                                </Badge>
+                              </div>
+                              {lead.service_interest && (
+                                <p className="mt-1 truncate text-xs text-ink-400">{lead.service_interest}</p>
+                              )}
+
+                              {/* Score visualization */}
+                              <div className="mt-2.5 flex items-center gap-2">
+                                <div className="h-1 w-full overflow-hidden rounded-full bg-paper-100" aria-hidden="true">
+                                  <div
+                                    className={cn("h-full rounded-full", scoreBar[tone])}
+                                    style={{ width: `${Math.min(100, lead.score)}%` }}
+                                  />
+                                </div>
+                                <span className="shrink-0 font-mono text-[9px] uppercase tracking-wide text-ink-300">
+                                  score
+                                </span>
+                              </div>
+
+                              <p className="mt-2 font-mono text-[10px] text-ink-300">{formatDate(lead.created_at)}</p>
+                            </div>
+                          );
+                          return conversationId ? (
+                            <Link
+                              key={lead.id}
+                              href={`/inbox/${conversationId}`}
+                              className="block"
+                              aria-label={`Open conversation with ${lead.name || lead.email || "this lead"}`}
+                            >
+                              {card}
+                            </Link>
+                          ) : (
+                            <div key={lead.id}>{card}</div>
+                          );
+                        })}
+                      </div>
+
+                      {columnLeads.length === 0 && (
+                        <EmptyState compact title="No leads here yet" description="New leads land in this stage when they qualify." />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </>
+        )}
       </div>
-      <p className="mt-3 text-xs text-center text-ink-700/40 md:hidden">← Swipe to scroll →</p>
     </div>
   );
 }

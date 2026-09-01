@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
 
 export function AddBusinessForm() {
   const [name, setName] = useState("");
@@ -34,19 +36,44 @@ export function AddBusinessForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-      <div className="flex-1">
-        <label className="mb-1.5 block text-xs font-medium text-ink-700">New business name</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Riverside Dental" required />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="New business name" htmlFor="new-biz-name" spacing="sm">
+          <Input
+            id="new-biz-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Riverside Dental"
+            required
+          />
+        </Field>
+        <Field label="Industry (optional)" htmlFor="new-biz-industry" spacing="sm">
+          <Input
+            id="new-biz-industry"
+            value={industry}
+            onChange={(e) => setIndustry(e.target.value)}
+            placeholder="e.g. Dental"
+          />
+        </Field>
       </div>
-      <div className="flex-1">
-        <label className="mb-1.5 block text-xs font-medium text-ink-700">Industry (optional)</label>
-        <Input value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="e.g. Dental" />
-      </div>
+
+      {error && (
+        <p role="alert" className="flex items-center gap-1.5 text-sm text-alert-600">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
       <Button type="submit" variant="signal" size="sm" disabled={saving}>
-        {saving ? "Creating…" : "Add business"}
+        {saving ? (
+          <>
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            Creating…
+          </>
+        ) : (
+          "Add business"
+        )}
       </Button>
-      {error && <p className="text-sm text-alert-600">{error}</p>}
     </form>
   );
 }

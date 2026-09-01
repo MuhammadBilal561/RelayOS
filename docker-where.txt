@@ -1,2 +1,0 @@
-﻿C:\Users\User\AppData\Local\Programs\DockerDesktop\resources\bin\docker
-C:\Users\User\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe

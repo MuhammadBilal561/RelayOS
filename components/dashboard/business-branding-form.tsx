@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
 
 interface Props {
   businessId: string;
@@ -18,7 +20,7 @@ export function BusinessBrandingForm({ businessId, initialName, initialBrandColo
   const [brandColor, setBrandColor] = useState(initialBrandColor);
   const [avgJobValue, setAvgJobValue] = useState(initialAvgJobValue?.toString() ?? "");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,55 +40,80 @@ export function BusinessBrandingForm({ businessId, initialName, initialBrandColo
     setSaving(false);
     if (!res.ok) {
       const body = await res.json();
-      setMessage(body.error ?? "Couldn't save changes.");
+      setMessage({ kind: "error", text: body.error ?? "Couldn't save changes." });
       return;
     }
-    setMessage("Saved.");
+    setMessage({ kind: "success", text: "Changes saved." });
     router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-ink-700">Business name</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-ink-700">Widget brand color</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Business name" htmlFor="biz-name" spacing="sm">
+          <Input id="biz-name" value={name} onChange={(e) => setName(e.target.value)} required />
+        </Field>
+        <Field
+          label="Widget brand color"
+          htmlFor="brand-color"
+          spacing="sm"
+          hint="Used by the chat widget header and send button."
+        >
           <div className="flex items-center gap-2">
             <input
+              id="brand-color"
               type="color"
               value={brandColor}
               onChange={(e) => setBrandColor(e.target.value)}
-              className="h-10 w-10 rounded-lg border border-ink-800/15"
+              className="h-10 w-11 shrink-0 cursor-pointer rounded-lg border border-ink-900/15 bg-white p-1 transition-colors hover:border-ink-900/25"
+              aria-label="Choose widget brand color"
             />
-            <Input value={brandColor} onChange={(e) => setBrandColor(e.target.value)} />
+            <Input value={brandColor} onChange={(e) => setBrandColor(e.target.value)} className="font-mono text-xs" />
           </div>
-        </div>
+        </Field>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-ink-700">
-          Average value of a booked job ($)
-        </label>
+      <Field
+        label="Average value of a booked job ($)"
+        htmlFor="avg-job"
+        spacing="sm"
+        hint="This is what turns bookings into the revenue-recovered number on Analytics."
+      >
         <Input
+          id="avg-job"
           type="number"
           min="0"
           step="0.01"
           placeholder="e.g. 250"
           value={avgJobValue}
           onChange={(e) => setAvgJobValue(e.target.value)}
+          className="max-w-[220px]"
         />
-        <p className="mt-1 text-xs text-ink-700/50">
-          This is what turns bookings into the "Revenue recovered" number on Analytics.
+      </Field>
+
+      {message && (
+        <p
+          role={message.kind === "error" ? "alert" : "status"}
+          className={`flex items-center gap-1.5 text-sm ${message.kind === "error" ? "text-alert-600" : "text-relay-700"}`}
+        >
+          {message.kind === "error" ? (
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          ) : (
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          )}
+          {message.text}
         </p>
-      </div>
+      )}
 
-      {message && <p className="text-sm text-ink-700/70">{message}</p>}
-
-      <Button type="submit" variant="outline" size="sm" disabled={saving}>
-        {saving ? "Saving…" : "Save changes"}
+      <Button type="submit" variant="primary" size="sm" disabled={saving}>
+        {saving ? (
+          <>
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            Saving…
+          </>
+        ) : (
+          "Save changes"
+        )}
       </Button>
     </form>
   );

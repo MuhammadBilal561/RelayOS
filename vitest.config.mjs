@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    pool: "vmThreads",
+    pool: "forks",
     include: ["**/*.test.ts"],
     exclude: ["node_modules", ".next"],
     coverage: {

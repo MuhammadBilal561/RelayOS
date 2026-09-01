@@ -1,13 +1,26 @@
 import Link from "next/link";
+import { CalendarDays, CalendarClock, ArrowRight } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { formatDateTime, formatRelativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const statusVariant = {
   confirmed: "live",
   completed: "neutral",
+  cancelled: "escalated",
+  no_show: "escalated",
+} as const;
+
+const statusTone = {
+  confirmed: "live",
+  completed: "idle",
   cancelled: "escalated",
   no_show: "escalated",
 } as const;
@@ -34,73 +47,146 @@ export default async function BookingsPage() {
     : { data: [] };
   const leadsById = new Map((leadRows ?? []).map((l) => [l.id, l]));
 
-  const bookings = (bookingRows ?? []).map((b) => ({ ...b, lead: leadsById.get(b.lead_id) ?? null }));
+  const bookings = (bookingRows ?? [])
+    .map((b) => ({ ...b, lead: leadsById.get(b.lead_id) ?? null }))
+    .filter((b) => b.status !== "cancelled" && b.status !== "no_show");
 
   return (
-    <div className="p-6 sm:p-10">
+    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
       <SectionHeader
         eyebrow="Bookings"
-        title="Upcoming appointments"
+        title="Appointments"
+        description="Every appointment the widget has booked on your calendar, with its current status."
+        actions={
+          bookings.length > 0 ? (
+            <Badge variant="neutral">{bookings.length} total</Badge>
+          ) : undefined
+        }
       />
 
-      {!connection ? (
-        <Card className="mt-6">
-          <CardContent>
-            <p className="text-sm font-medium text-ink-900">No calendar connected yet</p>
-            <p className="mt-1 text-sm text-ink-700/60">
-              Connect Google Calendar so the AI can check availability and book appointments automatically.
-            </p>
-            <Link
-              href="/settings"
-              className="mt-3 inline-block text-sm font-medium text-signal-600 underline underline-offset-4"
-            >
-              Go to Settings →
-            </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="mt-6">
-          <div className="overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0" role="region" aria-label="Bookings table" tabIndex={0}>
-            <table className="w-full min-w-[600px]" role="table">
-              <thead>
-                <tr className="border-b border-ink-800/10">
-                  <th className="sticky left-0 z-10 px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-700/50 bg-ink-950/50" scope="col">Lead</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-700/50" scope="col">Date & Time</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-700/50" scope="col">Status</th>
-                  <th className="w-1" scope="col"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-800/10">
-                {bookings.length === 0 && (
-                  <tr>
-                    <td className="px-5 py-10 text-center text-sm text-ink-700/60" colSpan={4}>
-                      No bookings yet — once the widget books an appointment, it'll show up here immediately.
-                    </td>
-                  </tr>
-                )}
-                {bookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-paper-50">
-                    <td className="sticky left-0 z-10 px-5 py-4 bg-white bg-opacity-95 backdrop-blur-sm">
-                      <p className="text-sm font-medium text-ink-900">{b.lead?.name || b.lead?.email || "Lead"}</p>
-                    </td>
-                    <td className="px-5 py-4 whitespace-nowrap font-mono text-xs text-ink-700/60">
-                      {new Date(b.start_time).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <Badge variant={statusVariant[b.status as keyof typeof statusVariant] ?? "neutral"}>{b.status}</Badge>
-                    </td>
-                    <td className="w-1"></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-xs text-center text-ink-700/40 md:hidden">← Swipe to scroll →</p>
-        </div>
-      )}
+      <div className="mt-6">
+        {!connection ? (
+          <Card className="mt-2">
+            <CardContent className="flex flex-col items-start gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-signal-500/10 text-signal-700">
+                  <CalendarClock className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="font-display text-sm font-semibold tracking-tight text-ink-950">
+                    No calendar connected yet
+                  </p>
+                  <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-500">
+                    Connect Google Calendar so the AI can check real availability and book
+                    appointments automatically.
+                  </p>
+                </div>
+              </div>
+              <Link href="/settings#calendar">
+                <Button variant="signal" size="sm">
+                  Connect Google Calendar
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : bookings.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            title="No bookings yet"
+            description="Once the widget books an appointment on your calendar, it'll show up here immediately — confirmed slots appear first, then completed ones."
+          />
+        ) : (
+          <>
+            {/* Desktop table */}
+            <div className="surface overflow-hidden">
+              <div className="overflow-x-auto scroll-thin" role="region" aria-label="Bookings table" tabIndex={0}>
+                <table className="w-full min-w-[600px] text-left">
+                  <thead>
+                    <tr className="border-b border-ink-900/[0.08]">
+                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                        Lead
+                      </th>
+                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                        Date & time
+                      </th>
+                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                        Status
+                      </th>
+                      <th scope="col" className="w-8 px-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink-900/[0.06]">
+                    {bookings.map((b) => {
+                      const isUpcoming = new Date(b.start_time).getTime() > Date.now();
+                      const statusKey = b.status as keyof typeof statusVariant;
+                      return (
+                        <tr
+                          key={b.id}
+                          className={cn(
+                            "group transition-colors duration-150 hover:bg-paper-50/80",
+                            !isUpcoming && "opacity-70"
+                          )}
+                        >
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <Avatar name={b.lead?.name ?? b.lead?.email} />
+                              <span className="text-sm font-medium text-ink-900">
+                                {b.lead?.name || b.lead?.email || "Lead"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-3.5">
+                            <p className="text-sm font-medium text-ink-900">{formatDateTime(b.start_time)}</p>
+                            <p className="mt-0.5 font-mono text-[10px] text-ink-300">
+                              {isUpcoming ? `in ${formatRelativeTime(b.start_time)}` : "completed"}
+                            </p>
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-3.5">
+                            <Badge
+                              variant={statusVariant[statusKey] ?? "neutral"}
+                              dot
+                              dotTone={statusTone[statusKey] ?? "idle"}
+                            >
+                              {b.status}
+                            </Badge>
+                          </td>
+                          <td className="px-3">
+                            <ArrowRight className="h-4 w-4 text-ink-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-signal-600" />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile list */}
+            <ul className="space-y-2 md:hidden">
+              {bookings.map((b) => {
+                const statusKey = b.status as keyof typeof statusVariant;
+                const isUpcoming = new Date(b.start_time).getTime() > Date.now();
+                return (
+                  <li key={b.id} className={cn(!isUpcoming && "opacity-70")}>
+                    <div className="surface flex items-center gap-3 p-3.5">
+                      <Avatar name={b.lead?.name ?? b.lead?.email} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-ink-900">
+                          {b.lead?.name || b.lead?.email || "Lead"}
+                        </p>
+                        <p className="mt-0.5 font-mono text-[11px] text-ink-400">{formatDateTime(b.start_time)}</p>
+                      </div>
+                      <Badge variant={statusVariant[statusKey] ?? "neutral"} dot dotTone={statusTone[statusKey] ?? "idle"}>
+                        {b.status}
+                      </Badge>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </div>
     </div>
   );
 }

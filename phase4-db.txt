@@ -1,2 +1,0 @@
-calendar_connections: [{"business_id":"679f7f98-96a3-4ab8-b3f8-23b25d1dcc27","calendar_id":"primary","connected_email":null,"token_expires_at":"2026-08-03T14:14:57.76+00:00"}]
-bookings: [{"id":"6e4bafbf-0ad2-4353-b42f-0d7d5a0d6aca","business_id":"679f7f98-96a3-4ab8-b3f8-23b25d1dcc27","start_time":"2026-08-04T14:00:00+00:00","end_time":"2026-08-04T14:30:00+00:00","calendar_event_id":"ofvg0hrnshb6o0fufi2tp4vapk","status":"confirmed"}]

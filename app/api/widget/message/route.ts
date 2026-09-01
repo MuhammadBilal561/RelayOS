@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   // Protects the business's free-tier Gemini quota from being drained by
   // a single abusive visitor. Swap for Upstash Redis (free tier) once
-  // deployed across multiple serverless instances — see docs/SECURITY.md.
+  // deployed across multiple serverless instances.
   const rateLimit = await checkRateLimit(`widget:${widgetKey}`);
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: "Too many messages — please wait a moment." }, { status: 429 });

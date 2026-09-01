@@ -4,31 +4,38 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // exercise the real query-building logic in lib/conversations.ts without
 // touching Postgres. Each table gets its own mock "result set" keyed by
 // table name, and the tests drive which rows exist (or don't).
+//
+// The mocks must live in vi.hoisted so they exist before the mocked module
+// factory runs (vitest hoists vi.mock above this module's top-level code).
 
-const chainResults = new Map<string, { data: unknown; error: unknown }>();
+const { chainResults, fromSpy } = vi.hoisted(() => {
+  const chainResults = new Map<string, { data: unknown; error: unknown }>();
 
-function createChain(table: string) {
-  const chain: Record<string, unknown> = {};
-  const passthroughMethods = ["select", "eq", "order", "limit", "single", "maybeSingle"];
-  for (const method of passthroughMethods) {
-    chain[method] = vi.fn(() => chain);
-  }
-  // A single table can be both read from and written to in one code path
-  // (leads: select-then-insert). Track whether this chain is an insert so the
-  // two calls can resolve to different fixtures — "<table>:insert" vs "<table>".
-  let isInsert = false;
-  chain.insert = vi.fn(() => {
-    isInsert = true;
+  function createChain(table: string) {
+    const chain: Record<string, unknown> = {};
+    const passthroughMethods = ["select", "eq", "order", "limit", "single", "maybeSingle"];
+    for (const method of passthroughMethods) {
+      chain[method] = vi.fn(() => chain);
+    }
+    // A single table can be both read from and written to in one code path
+    // (leads: select-then-insert). Track whether this chain is an insert so the
+    // two calls can resolve to different fixtures — "<table>:insert" vs "<table>".
+    let isInsert = false;
+    chain.insert = vi.fn(() => {
+      isInsert = true;
+      return chain;
+    });
+    chain.then = (resolve: (v: { data: unknown; error: unknown }) => void) => {
+      const key = isInsert ? `${table}:insert` : table;
+      return resolve(chainResults.get(key) ?? { data: null, error: null });
+    };
     return chain;
-  });
-  chain.then = (resolve: (v: { data: unknown; error: unknown }) => void) => {
-    const key = isInsert ? `${table}:insert` : table;
-    return resolve(chainResults.get(key) ?? { data: null, error: null });
-  };
-  return chain;
-}
+  }
 
-const fromSpy = vi.fn((table: string) => createChain(table));
+  const fromSpy = vi.fn((table: string) => createChain(table));
+
+  return { chainResults, fromSpy };
+});
 
 vi.mock("@/lib/supabase/server", () => ({
   createServiceRoleClient: () => ({ from: fromSpy }),

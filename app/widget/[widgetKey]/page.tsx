@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { ChatWidget } from "@/components/widget/chat-widget";
+import { WidgetFrame } from "@/components/widget/widget-frame";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +15,10 @@ export default async function WidgetPage({ params }: { params: { widgetKey: stri
   if (!business) notFound();
 
   return (
-    <div className="h-screen w-screen bg-transparent p-2">
-      <ChatWidget widgetKey={params.widgetKey} businessName={business.name} brandColor={business.brand_color} />
-    </div>
+    <WidgetFrame
+      widgetKey={params.widgetKey}
+      businessName={business.name}
+      brandColor={business.brand_color}
+    />
   );
 }

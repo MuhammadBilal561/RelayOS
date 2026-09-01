@@ -1,89 +1,79 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen bg-paper-50">
-      {/* Sidebar skeleton - fixed, stable while content loads */}
-      <aside className="fixed top-0 left-0 z-40 flex h-screen w-16 shrink-0 flex-col justify-between border-r border-ink-800/10 bg-ink-950 px-2 py-4 md:w-60 md:px-3" aria-hidden="true">
-        <div className="overflow-y-auto pr-2 md:pr-0">
-          <div className="mb-3 hidden px-2 md:block">
-            <div className="h-4 w-24 animate-shimmer rounded bg-ink-800/30" />
-            <div className="mt-0.5 h-3 w-16 animate-shimmer rounded bg-ink-800/30" />
+      {/* Mobile top bar skeleton */}
+      <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-ink-900/10 bg-paper-50/85 px-4 md:hidden">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="h-7 w-7 rounded-lg" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-2 w-28" />
           </div>
-
-          <div className="mb-4 hidden px-2 md:block">
-            <div className="h-8 w-full animate-shimmer rounded-lg bg-ink-800/30" />
-          </div>
-
-          <div className="mb-6 flex justify-center md:hidden">
-            <span className="signal-dot signal-dot--live" />
-          </div>
-
-          <nav className="space-y-0.5" role="navigation" aria-label="Main navigation">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-10 animate-shimmer rounded-lg bg-ink-800/30 mx-1 md:mx-0" />
-            ))}
-          </nav>
         </div>
+        <Skeleton className="h-9 w-9 rounded-lg" />
+      </div>
 
-        <div className="flex flex-col gap-1 border-t border-ink-800/10 pt-4">
-          <div className="h-10 animate-shimmer rounded-lg bg-ink-800/30 mx-1 md:mx-0" />
-          <div className="h-10 animate-shimmer rounded-lg bg-ink-800/30 mx-1 md:mx-0" />
+      {/* Desktop sidebar skeleton */}
+      <aside
+        className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-white/[0.06] bg-ink-950 p-3 md:flex"
+        aria-hidden="true"
+      >
+        <div className="mb-6 flex items-center gap-2.5 px-1">
+          <Skeleton className="h-7 w-7 rounded-lg bg-ink-800/30" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-16 bg-ink-800/30" />
+            <Skeleton className="h-2 w-24 bg-ink-800/30" />
+          </div>
+        </div>
+        <div className="mb-4">
+          <Skeleton className="h-8 w-full rounded-lg bg-ink-800/30" />
+        </div>
+        <nav className="space-y-1" aria-label="Loading navigation">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-lg bg-ink-800/30" />
+          ))}
+        </nav>
+        <div className="mt-auto space-y-1 pt-4">
+          <Skeleton className="h-9 w-full rounded-lg bg-ink-800/30" />
+          <Skeleton className="h-9 w-full rounded-lg bg-ink-800/30" />
         </div>
       </aside>
 
-      {/* Main content skeleton - realistic page structure */}
-      <main className="min-w-0 flex-1 overflow-y-auto md:ml-60 pt-4 md:pt-0" role="main" aria-busy="true" aria-label="Loading dashboard content">
-        <div className="p-6 sm:p-10 space-y-6">
+      {/* Main content skeleton */}
+      <main className="min-w-0 pt-14 md:pl-60 md:pt-0" role="status" aria-label="Loading dashboard">
+        <div className="mx-auto w-full max-w-6xl animate-fade-in p-6 sm:p-8">
           {/* Header skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              <div className="h-3 w-24 animate-shimmer rounded bg-ink-200/50" />
-              <div className="mt-2 h-6 w-48 animate-shimmer rounded bg-ink-200/50" />
-            </div>
-            <div className="h-8 w-24 animate-shimmer rounded-full bg-ink-200/50 shrink-0" />
+          <div className="max-w-xl">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="mt-2 h-7 w-48" />
+            <Skeleton className="mt-3 h-3 w-full" />
           </div>
 
-          {/* KPI cards skeleton - matches Overview page layout */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5" role="region" aria-label="Key metrics">
+          {/* KPI cards skeleton */}
+          <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-ink-800/10 bg-white p-6 shadow-panel animate-shimmer">
-                <div className="h-3 w-24 animate-shimmer rounded bg-ink-200/50" />
-                <div className="mt-3 h-8 w-16 animate-shimmer rounded bg-ink-200/50" />
+              <div key={i} className="surface p-4">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-3 h-7 w-14" />
               </div>
             ))}
           </div>
 
-          {/* Content card skeleton - matches the analytics/revenue card */}
-          <div className="rounded-xl border border-ink-800/10 bg-white p-6 shadow-panel animate-shimmer" role="region" aria-label="Content section">
-            <div className="h-4 w-48 animate-shimmer rounded bg-ink-200/50" />
-            <div className="mt-3 h-4 w-full animate-shimmer rounded bg-ink-200/50" />
-            <div className="mt-2 h-4 w-3/4 animate-shimmer rounded bg-ink-200/50" />
+          {/* Content card skeleton */}
+          <div className="surface mt-6 p-5">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="mt-3 h-3 w-full" />
+            <Skeleton className="mt-2 h-3 w-2/3" />
           </div>
 
-          {/* Table/kanban skeleton for Leads page - appears after header */}
-          <div className="mt-6 animate-shimmer" role="region" aria-label="Data table" aria-hidden="true">
-            <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-              {[...Array(6)].map((_, colIdx) => (
-                <div key={colIdx} className="min-w-[220px]">
-                  <div className="mb-2 flex items-center justify-between px-1">
-                    <div className="h-4 w-16 animate-shimmer rounded bg-ink-200/50" />
-                    <div className="h-4 w-8 animate-shimmer rounded bg-ink-200/50" />
-                  </div>
-                  <div className="space-y-2">
-                    {[...Array(3)].map((_, rowIdx) => (
-                      <div key={rowIdx} className="rounded-xl border border-ink-800/10 bg-white p-3 shadow-panel animate-shimmer">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="h-4 w-24 animate-shimmer rounded bg-ink-200/50 flex-1" />
-                          <div className="h-5 w-12 animate-shimmer rounded-full bg-ink-200/50 shrink-0" />
-                        </div>
-                        <div className="mt-1 h-3 w-3/4 animate-shimmer rounded bg-ink-200/50" />
-                        <div className="mt-2 h-2 w-20 animate-shimmer rounded bg-ink-200/50" />
-                      </div>
-                    ))}
-                    <div className="rounded-xl border border-dashed border-ink-800/15 p-3 animate-shimmer">
-                      <div className="h-3 w-12 animate-shimmer rounded bg-ink-200/50 mx-auto" />
-                    </div>
-                  </div>
-                </div>
+          {/* Row skeleton */}
+          <div className="surface mt-6 p-5">
+            <Skeleton className="h-4 w-32" />
+            <div className="mt-4 space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
           </div>

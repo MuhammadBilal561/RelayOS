@@ -1,2 +1,0 @@
-npm notice run relay-os@0.1.0 build
-npm notice run next build
