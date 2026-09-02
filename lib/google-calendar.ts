@@ -4,6 +4,11 @@ import { encryptToken, decryptToken, isEncrypted } from "@/lib/crypto";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.readonly"];
 
+function persistToken(token: string): string {
+  if (!process.env.ENCRYPTION_KEY) return token;
+  return encryptToken(token);
+}
+
 function getOAuthClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -37,9 +42,31 @@ export async function connectGoogleCalendar(businessId: string, code: string) {
   const client = getOAuthClient();
   const { tokens } = await client.getToken(code);
 
-  if (!tokens.access_token || !tokens.refresh_token || !tokens.expiry_date) {
-    throw new Error("Google did not return the expected tokens. Try disconnecting and reconnecting.");
+  if (!tokens.access_token) {
+    throw new Error("Google did not return an access token. Try disconnecting and reconnecting.");
   }
+
+  const supabase = createServiceRoleClient();
+
+  let refreshToken = tokens.refresh_token ?? null;
+  if (!refreshToken) {
+    const { data: existing } = await supabase
+      .from("calendar_connections")
+      .select("refresh_token")
+      .eq("business_id", businessId)
+      .maybeSingle();
+    if (existing?.refresh_token) {
+      refreshToken = isEncrypted(existing.refresh_token)
+        ? decryptToken(existing.refresh_token)
+        : existing.refresh_token;
+    }
+  }
+
+  if (!refreshToken) {
+    throw new Error("Google did not return a refresh token. Try disconnecting and reconnecting.");
+  }
+
+  const expiryDate = tokens.expiry_date ?? Date.now() + 3600_000;
 
   // We deliberately don't reuse the OAuth client for userinfo here — calling
   // oauth2.userinfo.get() with the freshly-set client can throw a transient
@@ -59,14 +86,13 @@ export async function connectGoogleCalendar(businessId: string, code: string) {
     console.warn("tokeninfo lookup failed:", profileRes.status, await profileRes.text());
   }
 
-  const supabase = createServiceRoleClient();
   const { error } = await supabase.from("calendar_connections").upsert(
     {
       business_id: businessId,
       provider: "google",
-      access_token: encryptToken(tokens.access_token),
-      refresh_token: encryptToken(tokens.refresh_token),
-      token_expires_at: new Date(tokens.expiry_date).toISOString(),
+      access_token: persistToken(tokens.access_token),
+      refresh_token: persistToken(refreshToken),
+      token_expires_at: new Date(expiryDate).toISOString(),
       calendar_id: "primary",
       connected_email: connectedEmail,
       updated_at: new Date().toISOString(),
@@ -114,7 +140,7 @@ async function getCalendarClientForBusiness(businessId: string) {
     await supabase
       .from("calendar_connections")
       .update({
-        access_token: encryptToken(tokens.access_token),
+        access_token: persistToken(tokens.access_token),
         token_expires_at: new Date(tokens.expiry_date ?? Date.now() + 3600_000).toISOString(),
         updated_at: new Date().toISOString(),
       })

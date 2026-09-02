@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavigationProvider, usePendingNavigation } from "./navigation-context";
-import { Tooltip } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
 
 const primaryNav = [
@@ -35,29 +34,26 @@ function NavLink({ href, label, icon: Icon, active }: { href: string; label: str
   const isPending = usePendingNavigation(href);
 
   return (
-    <Tooltip content={label} side="right">
-      <Link
-        href={href}
-        title={label}
-        aria-current={active ? "page" : undefined}
-        className={cn(
-          "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
-          active
-            ? "bg-white/[0.08] font-medium text-paper-50"
-            : "text-paper-50/55 hover:bg-white/[0.04] hover:text-paper-50"
-        )}
-      >
-        {active && (
-          <span
-            aria-hidden="true"
-            className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-signal-500"
-          />
-        )}
-        <Icon className={cn("h-4 w-4 shrink-0", active ? "text-signal-400" : "text-paper-50/45 group-hover:text-paper-50/70")} />
-        <span className="relative flex-1 truncate text-left">{label}</span>
-        {isPending && <Spinner className="h-3.5 w-3.5 shrink-0 text-signal-400" />}
-      </Link>
-    </Tooltip>
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
+        active
+          ? "bg-white/[0.08] font-medium text-paper-50"
+          : "text-paper-50/55 hover:bg-white/[0.04] hover:text-paper-50"
+      )}
+    >
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-signal-500"
+        />
+      )}
+      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-signal-400" : "text-paper-50/45 group-hover:text-paper-50/70")} />
+      <span className="relative min-w-0 flex-1 truncate text-left">{label}</span>
+      {isPending && <Spinner className="h-3.5 w-3.5 shrink-0 text-signal-400" />}
+    </Link>
   );
 }
 
@@ -65,9 +61,31 @@ interface SidebarProps {
   businessName: string;
   businesses: { id: string; name: string }[];
   currentBusinessId: string;
+  userEmail?: string;
 }
 
-export function Sidebar({ businessName, businesses, currentBusinessId }: SidebarProps) {
+function userInitials(userEmail?: string, businessName = "") {
+  const local = userEmail?.split("@")[0] ?? "";
+  const clean = local.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
+  if (clean) return clean;
+  return businessName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function userName(userEmail?: string) {
+  const local = userEmail?.split("@")[0] ?? "";
+  const clean = local.replace(/[._-]+/g, " ").trim();
+  return clean
+    .split(" ")
+    .map((w) => (w ? w[0]?.toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+export function Sidebar({ businessName, businesses, currentBusinessId, userEmail }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -149,7 +167,7 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
           </div>
         )}
 
-        <nav className="space-y-0.5" aria-label="Primary navigation">
+        <nav className="flex flex-col gap-0.5" aria-label="Primary navigation">
           {primaryNav.map((item) => {
             const active = pathname?.startsWith(item.href);
             return (
@@ -166,16 +184,11 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
       </div>
 
       <div className="border-t border-white/[0.06] px-3 pb-4 pt-3">
-        <div className="mb-2 hidden items-center gap-2 px-2.5 py-1 md:flex">
-          <span className="signal-dot signal-dot--live" aria-hidden="true" />
-          <span className="font-mono text-[10px] text-paper-50/40">widget live</span>
-        </div>
         <Link
           href="/settings"
-          title="Settings"
           aria-current={pathname?.startsWith("/settings") ? "page" : undefined}
           className={cn(
-            "mb-0.5 flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
+            "mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
             pathname?.startsWith("/settings")
               ? "bg-white/[0.08] font-medium text-paper-50"
               : "text-paper-50/55 hover:bg-white/[0.04] hover:text-paper-50"
@@ -186,12 +199,25 @@ export function Sidebar({ businessName, businesses, currentBusinessId }: Sidebar
         </Link>
         <button
           onClick={handleLogout}
-          title="Logout"
           className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-paper-50/55 transition-colors duration-150 hover:bg-white/[0.04] hover:text-alert-400"
         >
           <LogOut className="h-4 w-4 shrink-0 text-paper-50/45" />
           Logout
         </button>
+        {userEmail && (
+          <div className="mt-2 flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-2.5 py-2">
+            <span
+              aria-hidden="true"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-signal-500/20 text-[11px] font-semibold text-signal-300"
+            >
+              {userInitials(userEmail, businessName)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-paper-50/90">{userName(userEmail) || businessName}</p>
+              <p className="truncate text-[10px] text-paper-50/40">{userEmail}</p>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
