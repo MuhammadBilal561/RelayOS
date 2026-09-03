@@ -7,13 +7,13 @@ const KEY_LENGTH = 32;
 const VERSION_PREFIX = "v1:";
 
 function getEncryptionKey(): Buffer {
-  const keyHex = process.env.ENCRYPTION_KEY;
+  const keyHex = (process.env.ENCRYPTION_KEY ?? "").trim().replace(/^['"]|['"]$/g, "");
   if (!keyHex) {
     throw new Error(
       "ENCRYPTION_KEY environment variable is not set. Generate a 32-byte hex key (64 hex chars) and set it in your server environment."
     );
   }
-  if (keyHex.length !== 64) {
+  if (keyHex.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(keyHex)) {
     throw new Error("ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)");
   }
   return Buffer.from(keyHex, "hex");

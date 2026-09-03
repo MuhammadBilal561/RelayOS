@@ -5,8 +5,11 @@ import { encryptToken, decryptToken, isEncrypted } from "@/lib/crypto";
 const SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.readonly"];
 
 function persistToken(token: string): string {
-  if (!process.env.ENCRYPTION_KEY) return token;
-  return encryptToken(token);
+  try {
+    return encryptToken(token);
+  } catch {
+    return token;
+  }
 }
 
 function getOAuthClient() {
