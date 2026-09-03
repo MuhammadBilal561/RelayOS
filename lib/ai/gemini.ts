@@ -8,7 +8,17 @@ function envOr(name: string, fallback: string): string {
   return value || fallback;
 }
 
-export const CHAT_MODEL = envOr("GEMINI_CHAT_MODEL", "gemini-2.5-flash-lite");
+const RETIRED_CHAT_MODELS: Record<string, string> = {
+  "gemini-2.5-flash-lite": "gemini-3.5-flash-lite",
+  "models/gemini-2.5-flash-lite": "gemini-3.5-flash-lite",
+};
+
+function chatModel(): string {
+  const requested = envOr("GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite");
+  return RETIRED_CHAT_MODELS[requested] ?? requested;
+}
+
+export const CHAT_MODEL = chatModel();
 export const EMBEDDING_MODEL = envOr("GEMINI_EMBEDDING_MODEL", "text-embedding-004");
 
 // pgvector column in supabase/migrations/0001_init.sql is vector(768) —

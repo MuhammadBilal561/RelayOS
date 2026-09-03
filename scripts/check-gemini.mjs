@@ -13,7 +13,7 @@ const env = Object.fromEntries(
 );
 
 const apiKey = env.GEMINI_API_KEY;
-const chatModel = env.GEMINI_CHAT_MODEL || "gemini-2.5-flash-lite";
+const chatModel = env.GEMINI_CHAT_MODEL || "gemini-3.5-flash-lite";
 const embedModel = env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-001";
 console.log("Chat model:", chatModel);
 console.log("Embedding model:", embedModel);

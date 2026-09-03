@@ -388,7 +388,7 @@ the build can statically analyze pages — no real secrets ever touch CI.
 | `SUPABASE_SECRET_KEY` | Yes | Supabase service_role key (server-only) |
 | `GEMINI_API_KEY` | Yes | Gemini API key |
 | `ENCRYPTION_KEY` | No* | 64-char hex key for AES-256-GCM token encryption |
-| `GEMINI_CHAT_MODEL` | No | Chat model (default `gemini-2.5-flash-lite`) |
+| `GEMINI_CHAT_MODEL` | No | Chat model (default `gemini-3.5-flash-lite`) |
 | `GEMINI_EMBEDDING_MODEL` | No | Embedding model (default `gemini-embedding-001`) |
 | `GOOGLE_CLIENT_ID` | No* | Google OAuth client ID (for bookings) |
 | `GOOGLE_CLIENT_SECRET` | No* | Google OAuth client secret |
