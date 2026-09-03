@@ -22,11 +22,14 @@ export async function retrieveRelevantChunks(
   query: string,
   matchCount = 5
 ): Promise<RetrievedChunk[]> {
-  const queryEmbedding = await embedText(query);
-
-  const data = await getKnowledgeBaseChunks(businessId, queryEmbedding, matchCount);
-
-  return (data ?? []).filter((chunk: RetrievedChunk) => chunk.similarity >= MIN_SIMILARITY);
+  try {
+    const queryEmbedding = await embedText(query);
+    const data = await getKnowledgeBaseChunks(businessId, queryEmbedding, matchCount);
+    return (data ?? []).filter((chunk: RetrievedChunk) => chunk.similarity >= MIN_SIMILARITY);
+  } catch (err) {
+    console.error("Knowledge-base retrieval failed:", err);
+    return [];
+  }
 }
 
 /** Formats retrieved chunks into a block the system prompt can cite. */

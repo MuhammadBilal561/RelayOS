@@ -3,8 +3,13 @@ import { GoogleGenAI } from "@google/genai";
 // Free-tier-first model choice. Flash-Lite has the most generous free
 // rate limits (RPM/RPD) as of 2026 — swap via env var if you upgrade to
 // a paid tier or want Flash's stronger reasoning for a given deployment.
-export const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash-lite";
-export const EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL ?? "gemini-embedding-001";
+function envOr(name: string, fallback: string): string {
+  const value = process.env[name]?.trim();
+  return value || fallback;
+}
+
+export const CHAT_MODEL = envOr("GEMINI_CHAT_MODEL", "gemini-2.5-flash-lite");
+export const EMBEDDING_MODEL = envOr("GEMINI_EMBEDDING_MODEL", "text-embedding-004");
 
 // pgvector column in supabase/migrations/0001_init.sql is vector(768) —
 // keep this in sync if you change dimensionality.
