@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { widgetKey, sessionId, message } = body;
+  const { widgetKey: rawWidgetKey, sessionId, message } = body;
+  const widgetKey = rawWidgetKey.trim();
   if (!widgetKey || !sessionId || !message?.trim()) {
     return NextResponse.json({ error: "widgetKey, sessionId, and message are required" }, { status: 400 });
   }

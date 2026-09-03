@@ -20,13 +20,17 @@ type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 const supabaseAdmin = () => createServiceRoleClient();
 
 export async function getBusinessByWidgetKey(widgetKey: string) {
+  const key = widgetKey.trim();
   const { data, error } = await supabaseAdmin()
     .from("businesses")
-    .select("id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, n8n_webhook_url, n8n_webhook_url_lead_qualified, n8n_webhook_url_lead_escalated, n8n_webhook_url_booking_created, n8n_webhook_secret, avg_job_value, created_at")
-    .eq("public_widget_key", widgetKey)
-    .single();
+    .select("id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, created_at")
+    .eq("public_widget_key", key)
+    .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    if (error) console.error("Widget key lookup failed:", error.message, key);
+    return null;
+  }
   return data;
 }
 
