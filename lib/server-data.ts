@@ -37,7 +37,7 @@ export async function getBusinessByWidgetKey(widgetKey: string) {
 export async function getBusinessById(businessId: string) {
   const { data, error } = await supabaseAdmin()
     .from("businesses")
-    .select("id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, n8n_webhook_url, n8n_webhook_url_lead_qualified, n8n_webhook_url_lead_escalated, n8n_webhook_url_booking_created, n8n_webhook_secret, avg_job_value, created_at")
+    .select("id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, n8n_webhook_url, created_at")
     .eq("id", businessId)
     .single();
 

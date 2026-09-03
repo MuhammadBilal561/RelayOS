@@ -41,14 +41,24 @@ export async function emitAutomationEvent(
     }
 
     const column = WEBHOOK_URL_COLUMN[eventType];
-    const { data: business } = await supabase
+    let { data: business, error: selectError } = await supabase
       .from("businesses")
       .select(`${column}, ${WEBHOOK_SECRET_COLUMN}`)
       .eq("id", businessId)
       .single();
 
-    const webhookUrl = (business as Record<string, string | null> | null)?.[column] ?? null;
-    const webhookSecret = (business as Record<string, string | null> | null)?.[WEBHOOK_SECRET_COLUMN] ?? null;
+    if (selectError) {
+      const fallback = await supabase
+        .from("businesses")
+        .select("n8n_webhook_url")
+        .eq("id", businessId)
+        .single();
+      business = fallback.data as typeof business;
+    }
+
+    const row = business as Record<string, string | null> | null;
+    const webhookUrl = row?.[column] ?? row?.n8n_webhook_url ?? null;
+    const webhookSecret = row?.[WEBHOOK_SECRET_COLUMN] ?? null;
     if (!webhookUrl) return; // no automation configured for this event type — nothing more to do
 
     const body = JSON.stringify({

@@ -88,6 +88,22 @@ export async function POST(req: NextRequest) {
   // RLS confirms this user's organization actually owns the business.
   const { error } = await supabase.from("businesses").update(updates).eq("id", businessId);
 
+  if (error && /schema cache|does not exist|could not find/i.test(error.message)) {
+    const fallbackUrl =
+      updates.n8n_webhook_url_booking_created ??
+      updates.n8n_webhook_url_lead_qualified ??
+      updates.n8n_webhook_url_lead_escalated ??
+      null;
+    const { error: fallbackError } = await supabase
+      .from("businesses")
+      .update({ n8n_webhook_url: fallbackUrl })
+      .eq("id", businessId);
+    if (fallbackError) {
+      return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+    }
+    return NextResponse.json({ saved: true });
+  }
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

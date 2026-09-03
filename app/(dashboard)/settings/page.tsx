@@ -67,7 +67,7 @@ export default async function SettingsPage({
       .maybeSingle(),
     supabase
       .from("businesses")
-      .select("n8n_webhook_url, n8n_webhook_url_lead_qualified, n8n_webhook_url_lead_escalated, n8n_webhook_url_booking_created, avg_job_value")
+      .select("n8n_webhook_url, avg_job_value")
       .eq("id", business.id)
       .single(),
   ]);
@@ -75,10 +75,11 @@ export default async function SettingsPage({
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://your-relayos-domain.vercel.app";
   const snippet = `<script src="${appOrigin}/embed.js" data-widget-key="${business.public_widget_key}"></script>`;
 
+  const legacyWebhook = businessDetailsData?.n8n_webhook_url ?? "";
   const webhookUrls = {
-    n8n_webhook_url_lead_qualified: businessDetailsData?.n8n_webhook_url_lead_qualified ?? "",
-    n8n_webhook_url_lead_escalated: businessDetailsData?.n8n_webhook_url_lead_escalated ?? "",
-    n8n_webhook_url_booking_created: businessDetailsData?.n8n_webhook_url_booking_created ?? "",
+    n8n_webhook_url_lead_qualified: legacyWebhook,
+    n8n_webhook_url_lead_escalated: legacyWebhook,
+    n8n_webhook_url_booking_created: legacyWebhook,
   };
 
   return (
