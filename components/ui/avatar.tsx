@@ -13,7 +13,6 @@ function initials(name: string | null | undefined) {
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   name?: string | null;
-  /** 24 = xs, 32 = sm, 40 = md */
   size?: "xs" | "sm" | "md";
 }
 
@@ -27,7 +26,7 @@ export function Avatar({ name, size = "sm", className, ...props }: AvatarProps) 
   return (
     <div
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-ink-900/[0.08] font-semibold text-ink-500",
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-ink-900/[0.08] to-ink-900/[0.14] font-semibold text-ink-600 ring-1 ring-ink-900/[0.04]",
         sizes[size],
         className
       )}

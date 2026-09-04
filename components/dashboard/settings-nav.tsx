@@ -30,7 +30,7 @@ export function SettingsNav() {
   }, []);
 
   return (
-    <nav aria-label="Settings sections" className="space-y-0.5">
+    <nav aria-label="Settings sections" className="space-y-0.5 rounded-xl border border-ink-900/[0.06] bg-white/70 p-1.5">
       {SECTIONS.map((section) => {
         const isActive = active === section.id;
         return (
@@ -39,9 +39,9 @@ export function SettingsNav() {
             href={`#${section.id}`}
             aria-current={isActive ? "true" : undefined}
             className={cn(
-              "block rounded-lg px-3 py-1.5 text-[13px] transition-colors duration-150",
+              "relative block rounded-lg px-3 py-1.5 text-[13px] transition-colors duration-150",
               isActive
-                ? "bg-ink-900/[0.06] font-medium text-ink-900"
+                ? "bg-ink-950 font-medium text-white"
                 : "text-ink-500 hover:bg-ink-900/[0.04] hover:text-ink-900"
             )}
           >

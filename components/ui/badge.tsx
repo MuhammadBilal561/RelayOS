@@ -5,18 +5,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
   {
     variants: {
       variant: {
         neutral: "bg-ink-900/[0.06] text-ink-600",
-        live: "bg-relay-500/10 text-relay-700",
-        thinking: "bg-signal-500/10 text-signal-700",
-        escalated: "bg-alert-500/10 text-alert-700",
-        success: "bg-relay-500/10 text-relay-700",
-        warning: "bg-signal-500/10 text-signal-700",
-        danger: "bg-alert-500/10 text-alert-700",
-        outline: "border border-ink-900/15 text-ink-500",
+        live: "bg-relay-500/10 text-relay-700 ring-1 ring-relay-500/15",
+        thinking: "bg-signal-500/10 text-signal-700 ring-1 ring-signal-500/15",
+        escalated: "bg-alert-500/10 text-alert-700 ring-1 ring-alert-500/15",
+        success: "bg-relay-500/10 text-relay-700 ring-1 ring-relay-500/15",
+        warning: "bg-signal-500/10 text-signal-700 ring-1 ring-signal-500/15",
+        danger: "bg-alert-500/10 text-alert-700 ring-1 ring-alert-500/15",
+        outline: "border border-ink-900/12 text-ink-500",
       },
       dot: {
         true: "py-1",
@@ -40,13 +40,11 @@ const dotClass: Record<DotTone, string> = {
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {
-  /** Render a small status dot before the label */
   dot?: boolean;
-  /** Which color the dot should use */
   dotTone?: DotTone;
 }
 
-export function Badge({ className, variant, dot, dotTone = "neutral", ...props }: BadgeProps) {
+export function Badge({ className, variant, dot, dotTone = "neutral", children, ...props }: BadgeProps) {
   return (
     <span className={cn(badgeVariants({ variant, dot }), className)} {...props}>
       {dot && (
@@ -55,7 +53,7 @@ export function Badge({ className, variant, dot, dotTone = "neutral", ...props }
           className={cn("inline-block h-1.5 w-1.5 rounded-full", dotClass[dotTone])}
         />
       )}
-      {props.children}
+      {children}
     </span>
   );
 }

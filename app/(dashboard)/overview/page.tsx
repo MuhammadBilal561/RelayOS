@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/dashboard/section-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
+import { PageShell } from "@/components/dashboard/page-shell";
 
 async function getKpis(businessId: string) {
   const supabase = createServerSupabaseClient();
@@ -92,10 +93,11 @@ export default async function OverviewPage() {
   const kpis = await getKpis(business.id);
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+    <PageShell>
       <SectionHeader
         eyebrow="Overview"
         title={business.name}
+        description="A live snapshot of conversations, pipeline health, and what to set up next."
         actions={
           <Badge variant="live" dot dotTone="live">
             widget live
@@ -103,7 +105,7 @@ export default async function OverviewPage() {
         }
       />
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard label="Conversations" value={kpis.conversations} icon={MessageSquare} />
         <KpiCard label="Total leads" value={kpis.totalLeads} icon={Users} />
         <KpiCard
@@ -117,7 +119,7 @@ export default async function OverviewPage() {
         <KpiCard label="Escalated" value={kpis.escalated} icon={AlertTriangle} tone="alert" />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <div>
@@ -131,7 +133,7 @@ export default async function OverviewPage() {
           <CardContent>
             <Link
               href="/analytics"
-              className="group inline-flex items-center gap-1.5 text-sm font-medium text-signal-600 transition-colors hover:text-signal-700"
+              className="group inline-flex items-center gap-1.5 rounded-lg bg-ink-950 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-ink-800"
             >
               Open analytics
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -146,7 +148,7 @@ export default async function OverviewPage() {
               <CardDescription>Three steps to a live front office.</CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="space-y-0.5">
             {quickActions.map((action) => (
               <Link
                 key={action.href}
@@ -177,6 +179,6 @@ export default async function OverviewPage() {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }

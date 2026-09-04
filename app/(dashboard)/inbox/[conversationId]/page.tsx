@@ -6,15 +6,12 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/lib/format";
+import { PageShell } from "@/components/dashboard/page-shell";
 
 export default async function ConversationDetailPage({ params }: { params: { conversationId: string } }) {
   const business = await getCurrentBusiness();
   const supabase = createServerSupabaseClient();
 
-  // Two plain queries instead of a PostgREST embedded-relation select —
-  // simpler to keep correctly typed with a hand-maintained Database type,
-  // and avoids depending on foreign-key Relationships metadata we don't
-  // generate automatically in Phase 1.
   const { data: conversation, error: conversationError } = await supabase
     .from("conversations")
     .select("id, status, lead_id")
@@ -50,7 +47,7 @@ export default async function ConversationDetailPage({ params }: { params: { con
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-6 sm:p-8">
+    <PageShell width="narrow">
       <Link
         href="/inbox"
         className="inline-flex items-center gap-1.5 text-sm text-ink-500 transition-colors duration-150 hover:text-ink-950"
@@ -59,36 +56,34 @@ export default async function ConversationDetailPage({ params }: { params: { con
         Back to inbox
       </Link>
 
-      {/* Conversation header */}
-      <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar name={lead?.name ?? lead?.email} size="md" />
-          <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight text-ink-950">
-              {lead?.name || lead?.email || "Anonymous visitor"}
-            </h1>
-            <p className="mt-1 text-sm text-ink-500">
-              {lead?.email ?? "No email captured"}
-              {lead?.phone ? ` · ${lead.phone}` : " · No phone captured"}
-              {typeof lead?.score === "number" ? ` · score ${lead.score}` : ""}
-            </p>
+      <div className="surface mt-5 p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar name={lead?.name ?? lead?.email} size="md" />
+            <div>
+              <h1 className="font-display text-xl font-semibold tracking-tight text-ink-950">
+                {lead?.name || lead?.email || "Anonymous visitor"}
+              </h1>
+              <p className="mt-1 text-sm text-ink-500">
+                {lead?.email ?? "No email captured"}
+                {lead?.phone ? ` · ${lead.phone}` : " · No phone captured"}
+                {typeof lead?.score === "number" ? ` · score ${lead.score}` : ""}
+              </p>
+            </div>
           </div>
+          <Badge variant={conversation?.status === "escalated" ? "escalated" : conversation?.status === "open" ? "live" : "neutral"} dot>
+            {conversation?.status ?? "unknown"}
+          </Badge>
         </div>
-        <Badge variant={conversation?.status === "escalated" ? "escalated" : conversation?.status === "open" ? "live" : "neutral"} dot>
-          {conversation?.status ?? "unknown"}
-        </Badge>
       </div>
 
-      <div className="divider mt-6" />
-
-      {/* Transcript */}
       {(!messages || messages.length === 0) ? (
-        <div className="mt-8 rounded-xl border border-dashed border-ink-900/15 bg-white/60 px-6 py-14 text-center">
+        <div className="mt-6 rounded-xl border border-dashed border-ink-900/12 bg-white/70 px-6 py-14 text-center">
           <p className="text-sm font-medium text-ink-900">No messages</p>
           <p className="mt-1 text-sm text-ink-500">The transcript for this conversation is empty.</p>
         </div>
       ) : (
-        <div className="mt-8 space-y-4">
+        <div className="mt-6 space-y-4">
           {messages.map((m) => {
             const isVisitor = m.role === "visitor";
             return (
@@ -109,17 +104,17 @@ export default async function ConversationDetailPage({ params }: { params: { con
                   </div>
                   <div
                     className={cn(
-                      "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      "rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                       isVisitor
-                        ? "rounded-br-md bg-ink-950 text-paper-50"
+                        ? "dash-chat-visitor rounded-br-md text-paper-50"
                         : m.role === "staff"
                           ? "rounded-bl-md bg-signal-500/10 text-ink-900"
-                          : "rounded-bl-md bg-paper-100 text-ink-900"
+                          : "rounded-bl-md border border-ink-900/[0.06] bg-white text-ink-900"
                     )}
                   >
                     {m.content}
                     {m.tool_calls ? (
-                      <p className="mt-2 flex items-center gap-1.5 border-t border-ink-900/[0.08] pt-2 font-mono text-[10px] text-ink-400">
+                      <p className="mt-2 flex items-center gap-1.5 border-t border-current/10 pt-2 font-mono text-[10px] text-ink-400">
                         <Wrench className="h-3 w-3" aria-hidden="true" />
                         action taken: {JSON.stringify(m.tool_calls)}
                       </p>
@@ -131,6 +126,6 @@ export default async function ConversationDetailPage({ params }: { params: { con
           })}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

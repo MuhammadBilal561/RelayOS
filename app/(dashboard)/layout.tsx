@@ -11,14 +11,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ]);
 
   return (
-    <div className="min-h-screen bg-paper-50">
+    <div className="dashboard-shell">
       <Sidebar
         businessName={business.name}
         businesses={businesses}
         currentBusinessId={business.id}
         userEmail={auth.user?.email ?? undefined}
       />
-      <main className="min-w-0 pt-14 md:pl-60 md:pt-0">{children}</main>
+      <main className="min-w-0 pt-14 md:pl-64 md:pt-0">{children}</main>
     </div>
   );
 }

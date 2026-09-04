@@ -21,6 +21,7 @@ import { AddBusinessForm } from "@/components/dashboard/add-business-form";
 import { EmbedCode } from "@/components/dashboard/embed-code";
 import { SettingsNav } from "@/components/dashboard/settings-nav";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { PageShell } from "@/components/dashboard/page-shell";
 
 function SettingsSection({
   id,
@@ -38,7 +39,7 @@ function SettingsSection({
   return (
     <section id={id} className="scroll-mt-20 md:scroll-mt-8">
       <div className="mb-3 flex items-start gap-3">
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-900/[0.06] text-ink-500">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-900/[0.06] text-ink-500 ring-1 ring-ink-900/[0.04]">
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
         <div>
@@ -127,7 +128,7 @@ export default async function SettingsPage({
   const webhookUrls = resolveAutomationWebhookUrls(webhookRow);
 
   return (
-    <div className="mx-auto w-full max-w-5xl p-6 sm:p-8">
+    <PageShell>
       <SectionHeader
         eyebrow="Settings"
         title={business.name}
@@ -137,7 +138,7 @@ export default async function SettingsPage({
       {searchParams.calendar_connected && (
         <p
           role="status"
-          className="mt-6 flex items-center gap-2 rounded-lg bg-relay-500/10 px-3 py-2.5 text-sm text-relay-700"
+          className="mt-6 flex items-center gap-2 rounded-xl border border-relay-500/20 bg-relay-500/10 px-3.5 py-2.5 text-sm text-relay-700"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           Google Calendar connected — the widget can now check availability and book appointments.
@@ -146,7 +147,7 @@ export default async function SettingsPage({
       {searchParams.calendar_error && (
         <p
           role="alert"
-          className="mt-6 flex items-center gap-2 rounded-lg bg-alert-500/10 px-3 py-2.5 text-sm text-alert-700"
+          className="mt-6 flex items-center gap-2 rounded-xl border border-alert-500/20 bg-alert-500/10 px-3.5 py-2.5 text-sm text-alert-700"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           {searchParams.calendar_error}
@@ -155,7 +156,7 @@ export default async function SettingsPage({
       {businessDetailsError && (
         <p
           role="alert"
-          className="mt-6 rounded-lg bg-alert-500/10 px-3 py-2.5 text-sm text-alert-700"
+          className="mt-6 rounded-xl border border-alert-500/20 bg-alert-500/10 px-3.5 py-2.5 text-sm text-alert-700"
         >
           {businessDetailsError} Please refresh and try again.
         </p>
@@ -266,6 +267,6 @@ export default async function SettingsPage({
           </SettingsSection>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

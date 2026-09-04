@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadsTrendChart } from "@/components/dashboard/leads-trend-chart";
 import { SectionHeader } from "@/components/dashboard/section-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
+import { PageShell } from "@/components/dashboard/page-shell";
 
 export default async function AnalyticsPage() {
   const business = await getCurrentBusiness();
@@ -48,20 +49,20 @@ export default async function AnalyticsPage() {
   const maxFunnelCount = Math.max(1, ...summary.funnel.map((s) => s.count));
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+    <PageShell>
       <SectionHeader
         eyebrow="Analytics"
         title="Revenue recovery"
         description="Last 30 days, computed live from Postgres — nothing here is mocked."
       />
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} hint={kpi.hint} icon={kpi.icon} tone={kpi.tone} />
         ))}
       </div>
 
-      <Card className="mt-4">
+      <Card className="mt-5">
         <CardHeader>
           <div>
             <CardTitle>Leads & bookings</CardTitle>
@@ -69,7 +70,7 @@ export default async function AnalyticsPage() {
           </div>
           <Badge variant="outline">live</Badge>
         </CardHeader>
-        <div className="p-5 pt-2">
+        <div className="p-5 pt-3">
           <div className="mb-3 flex items-center gap-4 text-[11px] font-medium text-ink-500">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-signal-500" aria-hidden="true" /> Leads
@@ -99,7 +100,7 @@ export default async function AnalyticsPage() {
                     <span className="font-mono text-[10px] text-ink-300">0{i + 1}</span>
                     {stage.label}
                   </span>
-                  <span className="font-mono text-xs text-ink-500">{stage.count}</span>
+                  <span className="font-mono text-xs tabular-nums text-ink-500">{stage.count}</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-paper-100" aria-hidden="true">
                   <div
@@ -112,6 +113,6 @@ export default async function AnalyticsPage() {
           })}
         </div>
       </Card>
-    </div>
+    </PageShell>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { KnowledgeBaseUploader } from "@/components/dashboard/kb-uploader";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { PageShell } from "@/components/dashboard/page-shell";
 import { formatDate } from "@/lib/format";
 
 export default async function KnowledgeBasePage() {
@@ -37,7 +38,7 @@ export default async function KnowledgeBasePage() {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-6 sm:p-8">
+    <PageShell width="narrow">
       <SectionHeader
         eyebrow="Knowledge Base"
         title="What your AI knows"
@@ -81,7 +82,7 @@ export default async function KnowledgeBasePage() {
               <div className="surface p-4 transition-shadow duration-150 hover:shadow-panel-hover">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-signal-500/10 text-signal-700">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-signal-500/10 text-signal-700">
                       <BookOpen className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
@@ -120,6 +121,6 @@ export default async function KnowledgeBasePage() {
         </Link>{" "}
         and ask a question about what you just added.
       </p>
-    </div>
+    </PageShell>
   );
 }

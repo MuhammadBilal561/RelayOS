@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { PageShell } from "@/components/dashboard/page-shell";
 import { formatDateTime, formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +58,7 @@ export default async function BookingsPage() {
 
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+    <PageShell>
       <SectionHeader
         eyebrow="Bookings"
         title="Appointments"
@@ -124,25 +125,24 @@ export default async function BookingsPage() {
           />
         ) : (
           <>
-            {/* Desktop table */}
-            <div className="surface overflow-hidden">
+            <div className="surface hidden overflow-hidden md:block">
               <div className="overflow-x-auto scroll-thin" role="region" aria-label="Bookings table" tabIndex={0}>
-                <table className="w-full min-w-[600px] text-left">
+                <table className="dash-table w-full min-w-[600px] text-left">
                   <thead>
-                    <tr className="border-b border-ink-900/[0.08]">
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                    <tr className="border-b border-ink-900/[0.07]">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Lead
                       </th>
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Date & time
                       </th>
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Status
                       </th>
                       <th scope="col" className="w-8 px-3" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ink-900/[0.06]">
+                  <tbody className="divide-y divide-ink-900/[0.05]">
                     {visibleBookings.map((b) => {
                       const isUpcoming = new Date(b.start_time).getTime() > Date.now();
                       const statusKey = b.status as keyof typeof statusVariant;
@@ -150,7 +150,7 @@ export default async function BookingsPage() {
                         <tr
                           key={b.id}
                           className={cn(
-                            "group transition-colors duration-150 hover:bg-paper-50/80",
+                            "group",
                             !isUpcoming && "opacity-70"
                           )}
                         >
@@ -188,7 +188,6 @@ export default async function BookingsPage() {
               </div>
             </div>
 
-            {/* Mobile list */}
             <ul className="space-y-2 md:hidden">
               {visibleBookings.map((b) => {
                 const statusKey = b.status as keyof typeof statusVariant;
@@ -214,6 +213,6 @@ export default async function BookingsPage() {
           </>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

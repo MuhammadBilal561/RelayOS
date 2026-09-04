@@ -22,6 +22,7 @@ const tooltipStyle = {
   boxShadow: "0 12px 28px -8px rgba(17,20,27,0.18)",
   fontSize: 12,
   fontFamily: "var(--font-inter)",
+  background: "#fff",
 };
 
 export function LeadsTrendChart({ data }: { data: DailyPoint[] }) {
@@ -29,8 +30,8 @@ export function LeadsTrendChart({ data }: { data: DailyPoint[] }) {
 
   if (isEmpty) {
     return (
-      <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-ink-900/15 bg-paper-50/60">
-        <p className="text-sm text-ink-400">
+      <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-ink-900/12 bg-paper-50/60">
+        <p className="max-w-sm text-center text-sm text-ink-400">
           No activity in the last 30 days — metrics appear here as leads and bookings come in.
         </p>
       </div>

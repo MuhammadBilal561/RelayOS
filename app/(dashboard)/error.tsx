@@ -17,11 +17,11 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper-50 p-6 pt-24 md:pt-6">
+    <div className="flex min-h-[70vh] items-center justify-center p-6 pt-24 md:pt-6">
       <div className="w-full max-w-md animate-scale-in">
         <Card>
           <CardContent className="px-6 py-8">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-alert-500/10 text-alert-600">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-alert-500/10 text-alert-600 ring-1 ring-alert-500/15">
               <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             </div>
             <h1 className="font-display text-lg font-semibold tracking-tight text-ink-950">

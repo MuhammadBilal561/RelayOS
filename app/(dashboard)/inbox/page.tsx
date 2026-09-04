@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { PageShell } from "@/components/dashboard/page-shell";
 import { formatRelativeTime } from "@/lib/format";
 
 const statusVariant = {
@@ -24,8 +25,6 @@ export default async function InboxPage() {
   const business = await getCurrentBusiness();
   const supabase = createServerSupabaseClient();
 
-  // Two plain queries instead of a PostgREST embedded-relation select —
-  // see the note in inbox/[conversationId]/page.tsx for why.
   const { data: conversationRows, error: conversationError } = await supabase
     .from("conversations")
     .select("id, status, created_at, summary_text, lead_id")
@@ -53,7 +52,7 @@ export default async function InboxPage() {
     ) : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+    <PageShell>
       <SectionHeader
         eyebrow="Inbox"
         title="Conversations"
@@ -76,30 +75,29 @@ export default async function InboxPage() {
           />
         ) : (
           <>
-            {/* Desktop table */}
-            <div className="surface overflow-hidden">
+            <div className="surface hidden overflow-hidden md:block">
               <div className="overflow-x-auto scroll-thin" role="region" aria-label="Conversations table" tabIndex={0}>
-                <table className="w-full min-w-[640px] text-left">
+                <table className="dash-table w-full min-w-[640px] text-left">
                   <thead>
-                    <tr className="border-b border-ink-900/[0.08]">
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                    <tr className="border-b border-ink-900/[0.07]">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Conversation
                       </th>
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Status
                       </th>
-                      <th scope="col" className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-400">
+                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         Last activity
                       </th>
                       <th scope="col" className="w-8 px-3" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ink-900/[0.06]">
+                  <tbody className="divide-y divide-ink-900/[0.05]">
                     {conversations.map((c) => {
                       const lead = c.leads;
                       const statusKey = c.status as keyof typeof statusVariant;
                       return (
-                        <tr key={c.id} className="group transition-colors duration-150 hover:bg-paper-50/80">
+                        <tr key={c.id} className="group">
                           <td className="px-5 py-3.5">
                             <Link href={`/inbox/${c.id}`} className="flex items-center gap-3">
                               <Avatar name={lead?.name ?? lead?.email} />
@@ -139,7 +137,6 @@ export default async function InboxPage() {
               </div>
             </div>
 
-            {/* Mobile list */}
             <ul className="space-y-2 md:hidden">
               {conversations.map((c) => {
                 const lead = c.leads;
@@ -177,6 +174,6 @@ export default async function InboxPage() {
           </>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
