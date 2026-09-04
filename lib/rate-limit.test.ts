@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { InMemoryRateLimiter, checkRateLimit } from "@/lib/rate-limit";
+import { InMemoryRateLimiter, checkRateLimit, createRateLimiter } from "@/lib/rate-limit";
 
 describe("InMemoryRateLimiter", () => {
   let limiter: InMemoryRateLimiter;
@@ -80,6 +80,30 @@ describe("checkRateLimit (backward compatibility)", () => {
     vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     // Reset singleton by creating a new limiter instance
     // The singleton is module-scoped, so we need to re-import
+  });
+
+  describe("production Upstash configuration", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("initializes Upstash when packages and credentials are available", () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("RATE_LIMITER_BACKEND", "upstash-redis");
+      vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://example.upstash.io");
+      vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "test-token");
+
+      expect(() => createRateLimiter()).not.toThrow();
+    });
+
+    it("fails with a configuration error when Upstash credentials are missing", () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("RATE_LIMITER_BACKEND", "upstash-redis");
+      vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
+      vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
+
+      expect(() => createRateLimiter()).toThrow(/requires UPSTASH_REDIS_REST_URL/);
+    });
   });
 
   afterEach(() => {

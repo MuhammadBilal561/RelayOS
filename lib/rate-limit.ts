@@ -1,3 +1,6 @@
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
 /**
  * Rate Limiter Interface
  * 
@@ -142,25 +145,6 @@ export function createRateLimiter(): RateLimiter {
  * Install with: npm install @upstash/ratelimit @upstash/redis
  */
 function createUpstashRateLimiter(config: RateLimiterConfig): RateLimiter {
-  // Dynamic import to avoid requiring the package when not used
-  let Ratelimit: any;
-  let Redis: any;
-  
-  try {
-    // Keep optional production dependencies out of the bundle when the memory
-    // backend is selected. They are resolved only in deployments that opt in.
-    const loadOptionalModule = (name: string) => (0, eval)("require")(name) as Record<string, any>;
-    const ratelimitModule = loadOptionalModule("@upstash/ratelimit");
-    const redisModule = loadOptionalModule("@upstash/redis");
-    Ratelimit = ratelimitModule.Ratelimit;
-    Redis = redisModule.Redis;
-  } catch {
-    throw new Error(
-      "Upstash Redis backend selected but @upstash/ratelimit and/or @upstash/redis not installed. " +
-      "Run: npm install @upstash/ratelimit @upstash/redis"
-    );
-  }
-
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -187,7 +171,7 @@ function createUpstashRateLimiter(config: RateLimiterConfig): RateLimiter {
       };
     },
     async reset(key: string) {
-      await ratelimit.reset(key);
+      await ratelimit.resetUsedTokens(key);
     },
   };
 }
