@@ -26,6 +26,8 @@ services:
       # Set this to the same value saved under Settings → Automations.
       - RELAYOS_WEBHOOK_SECRET=${RELAYOS_WEBHOOK_SECRET:?set RELAYOS_WEBHOOK_SECRET}
       - NODE_FUNCTION_ALLOW_BUILTIN=crypto
+      # Required for the verifier Code nodes to read the host-injected secret.
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
     volumes:
       - n8n_data:/home/node/.n8n
 

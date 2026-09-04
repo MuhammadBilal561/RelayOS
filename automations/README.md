@@ -22,9 +22,11 @@ These three exports are event-specific workflows:
    With Docker Compose, create a `.env` file beside `docker-compose.yml`, add
    `RELAYOS_WEBHOOK_SECRET=<random-32-byte-value>`, and run `docker compose up -d`
    again. Do not put the value in a workflow field or JSON export. The verifier
-   reads it through n8n's supported `$env` Code-node variable; do not use
-   `$request` or `$credentials` in the Code node. The compose file also enables
-   the `crypto` built-in.
+   reads it through n8n's supported `$env` Code-node variable. Set
+   `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` in the n8n host environment (the
+   included Compose file sets this) and restart n8n. Do not use `$request` or
+   `$credentials` in the Code node. The compose file also enables the `crypto`
+   built-in.
 5. Keep each Webhook node's **Raw Body** option enabled. The verifier signs the
    exact compact JSON body sent by RelayOS, not a re-serialized `$json` object.
 
