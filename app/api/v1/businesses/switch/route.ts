@@ -15,8 +15,12 @@ export async function GET(req: NextRequest) {
   if (!businessId) return NextResponse.redirect(overviewUrl);
 
   const supabase = createServerSupabaseClient();
-  const { data: business } = await supabase.from("businesses").select("id").eq("id", businessId).maybeSingle();
+  const { data: business, error } = await supabase.from("businesses").select("id").eq("id", businessId).maybeSingle();
 
+  if (error) {
+    console.error("Business switch lookup failed:", error.message);
+    return NextResponse.redirect(overviewUrl);
+  }
   if (!business) {
     // Either it doesn't exist, or RLS hid it because it belongs to another
     // organization — either way, don't switch to it.

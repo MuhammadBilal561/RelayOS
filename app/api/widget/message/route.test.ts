@@ -96,6 +96,11 @@ describe("POST /api/widget/message — validation", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 instead of throwing when required fields have the wrong types", async () => {
+    const res = await POST(makeRequest({ widgetKey: 42, sessionId: {}, message: "hello" }));
+    expect(res.status).toBe(400);
+  });
+
   it("returns 400 for a message exceeding 2000 chars", async () => {
     const res = await POST(
       makeRequest({ widgetKey: WIDGET_KEY, sessionId: SESSION, message: "x".repeat(2001) })

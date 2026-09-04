@@ -10,7 +10,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { businessId
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const update: Record<string, unknown> = {};
 
   if (typeof body.name === "string" && body.name.trim()) update.name = body.name.trim();
@@ -33,8 +38,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { businessId
   }
 
   // RLS confirms this user's organization actually owns the business.
-  const { error } = await supabase.from("businesses").update(update).eq("id", params.businessId);
+  const { data: updatedBusiness, error } = await supabase
+    .from("businesses")
+    .update(update)
+    .eq("id", params.businessId)
+    .select("id")
+    .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!updatedBusiness) return NextResponse.json({ error: "Business not found" }, { status: 404 });
 
   return NextResponse.json({ saved: true });
 }

@@ -102,6 +102,19 @@ export function createRateLimiter(): RateLimiter {
   const maxRequests = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? "12", 10);
   const prefix = process.env.RATE_LIMIT_PREFIX ?? "rl:";
 
+  if (!Number.isSafeInteger(windowMs) || windowMs <= 0) {
+    throw new Error("RATE_LIMIT_WINDOW_MS must be a positive integer");
+  }
+  if (!Number.isSafeInteger(maxRequests) || maxRequests <= 0) {
+    throw new Error("RATE_LIMIT_MAX_REQUESTS must be a positive integer");
+  }
+  if (process.env.NODE_ENV === "production" && backend === "memory") {
+    throw new Error(
+      "The in-memory rate limiter is not safe for production. Set RATE_LIMITER_BACKEND=upstash-redis " +
+        "and configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN."
+    );
+  }
+
   const config: RateLimiterConfig = { windowMs, maxRequests, prefix };
 
   switch (backend) {
@@ -134,8 +147,11 @@ function createUpstashRateLimiter(config: RateLimiterConfig): RateLimiter {
   let Redis: any;
   
   try {
-    const ratelimitModule = require("@upstash/ratelimit");
-    const redisModule = require("@upstash/redis");
+    // Keep optional production dependencies out of the bundle when the memory
+    // backend is selected. They are resolved only in deployments that opt in.
+    const loadOptionalModule = (name: string) => (0, eval)("require")(name) as Record<string, any>;
+    const ratelimitModule = loadOptionalModule("@upstash/ratelimit");
+    const redisModule = loadOptionalModule("@upstash/redis");
     Ratelimit = ratelimitModule.Ratelimit;
     Redis = redisModule.Redis;
   } catch {

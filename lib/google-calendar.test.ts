@@ -140,6 +140,12 @@ beforeEach(() => {
 });
 
 describe("checkAvailability", () => {
+  it("rejects invalid dates and durations before calling Google", async () => {
+    await expect(checkAvailability(BUSINESS, "not-a-date")).rejects.toThrow(/valid ISO/);
+    await expect(checkAvailability(BUSINESS, "2026-08-03T15:00:00Z", 0)).rejects.toThrow(/between 1 and 1440/);
+    expect(h.freebusyQueryMock).not.toHaveBeenCalled();
+  });
+
   it("returns not-connected when the business has no calendar connection", async () => {
     chainResults.set("calendar_connections", { data: null, error: null });
 
@@ -253,6 +259,21 @@ describe("connectGoogleCalendar", () => {
     expect(tablesQueried).toContain("calendar_connections");
     vi.unstubAllGlobals();
   });
+
+  it("does not fall back to plaintext when token encryption is unavailable", async () => {
+    h.getTokenMock.mockResolvedValue({
+      tokens: { access_token: "at_code", refresh_token: "rt_code", expiry_date: Date.now() + 3600_000 },
+    });
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({}) })));
+    const previousKey = process.env.ENCRYPTION_KEY;
+    delete process.env.ENCRYPTION_KEY;
+    try {
+      await expect(connectGoogleCalendar("biz_abc", "the_code")).rejects.toThrow(/ENCRYPTION_KEY/);
+    } finally {
+      process.env.ENCRYPTION_KEY = previousKey;
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("legacy plaintext token compatibility", () => {
@@ -269,4 +290,3 @@ describe("legacy plaintext token compatibility", () => {
     expect(result.available).toBe(true);
   });
 });
-

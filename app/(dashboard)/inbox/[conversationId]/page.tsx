@@ -15,26 +15,32 @@ export default async function ConversationDetailPage({ params }: { params: { con
   // simpler to keep correctly typed with a hand-maintained Database type,
   // and avoids depending on foreign-key Relationships metadata we don't
   // generate automatically in Phase 1.
-  const { data: conversation } = await supabase
+  const { data: conversation, error: conversationError } = await supabase
     .from("conversations")
     .select("id, status, lead_id")
     .eq("id", params.conversationId)
     .eq("business_id", business.id)
     .single();
+  if (conversationError) throw new Error(`Failed to load conversation: ${conversationError.message}`);
 
-  const { data: lead } = conversation
+  const { data: lead, error: leadError } = conversation
     ? await supabase
         .from("leads")
         .select("name, email, phone, status, score")
         .eq("id", conversation.lead_id)
+        .eq("business_id", business.id)
         .single()
-    : { data: null };
+    : { data: null, error: null };
+  if (leadError) throw new Error(`Failed to load conversation contact: ${leadError.message}`);
 
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("id, role, content, created_at, tool_calls")
-    .eq("conversation_id", params.conversationId)
-    .order("created_at", { ascending: true });
+  const { data: messages, error: messagesError } = conversation
+    ? await supabase
+        .from("messages")
+        .select("id, role, content, created_at, tool_calls")
+        .eq("conversation_id", params.conversationId)
+        .order("created_at", { ascending: true })
+    : { data: null, error: null };
+  if (messagesError) throw new Error(`Failed to load conversation messages: ${messagesError.message}`);
 
   const roleLabel: Record<string, string> = {
     visitor: "Visitor",

@@ -72,7 +72,7 @@ describe("getBusinessByWidgetKey", () => {
   });
 
   it("returns null when the widget key is invalid (error from Postgres)", async () => {
-    chainResults.set("businesses", { data: null, error: { message: "No rows" } });
+    chainResults.set("businesses", { data: null, error: { code: "PGRST116", message: "No rows" } });
 
     const result = await getBusinessByWidgetKey("unknown-key");
 
@@ -85,6 +85,12 @@ describe("getBusinessByWidgetKey", () => {
     const result = await getBusinessByWidgetKey("no-match");
 
     expect(result).toBeNull();
+  });
+
+  it("surfaces database failures instead of treating an outage as an unknown widget", async () => {
+    chainResults.set("businesses", { data: null, error: { code: "08006", message: "connection terminated" } });
+
+    await expect(getBusinessByWidgetKey("unknown-key")).rejects.toThrow(/Failed to resolve widget/);
   });
 });
 

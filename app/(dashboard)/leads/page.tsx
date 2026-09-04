@@ -34,20 +34,23 @@ export default async function LeadsPage() {
   const business = await getCurrentBusiness();
   const supabase = createServerSupabaseClient();
 
-  const { data: leads } = await supabase
+  const { data: leads, error: leadsError } = await supabase
     .from("leads")
     .select("id, name, email, phone, service_interest, status, score, created_at")
     .eq("business_id", business.id)
     .order("score", { ascending: false });
+  if (leadsError) throw new Error(`Failed to load leads: ${leadsError.message}`);
 
   const leadIds = (leads ?? []).map((l) => l.id);
-  const { data: conversationRows } = leadIds.length
+  const { data: conversationRows, error: conversationError } = leadIds.length
     ? await supabase
         .from("conversations")
         .select("id, lead_id, created_at")
+        .eq("business_id", business.id)
         .in("lead_id", leadIds)
         .order("created_at", { ascending: false })
-    : { data: [] };
+    : { data: [], error: null };
+  if (conversationError) throw new Error(`Failed to load lead conversations: ${conversationError.message}`);
 
   // First conversation seen per lead (list is already newest-first) is
   // that lead's most recent conversation.

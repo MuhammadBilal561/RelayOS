@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
+import { isMissingColumnError, resolveAutomationWebhookUrls } from "@/lib/automation-webhooks";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +61,7 @@ export default async function SettingsPage({
   const supabase = createServerSupabaseClient();
   const business = await getCurrentBusiness();
 
-  const [{ data: connectionData }, { data: businessDetailsData }] = await Promise.all([
+  const [{ data: connectionData, error: connectionError }, businessDetailsResult] = await Promise.all([
     supabase
       .from("calendar_connections")
       .select("connected_email")
@@ -67,20 +69,62 @@ export default async function SettingsPage({
       .maybeSingle(),
     supabase
       .from("businesses")
-      .select("n8n_webhook_url, avg_job_value")
+      .select(
+        "n8n_webhook_url_lead_qualified, n8n_webhook_url_lead_escalated, n8n_webhook_url_booking_created, n8n_webhook_url, avg_job_value"
+      )
       .eq("id", business.id)
       .single(),
   ]);
 
+  let webhookRow: Record<string, string | null> | null = null;
+  let businessDetailsError: string | null = connectionError ? "Failed to load calendar connection." : null;
+  if (connectionError) {
+    console.error("Settings: failed to load calendar connection:", connectionError.message, { businessId: business.id });
+  }
+  if (!businessDetailsResult.error) {
+    webhookRow = businessDetailsResult.data as Record<string, string | null>;
+  } else {
+    if (isMissingColumnError(businessDetailsResult.error)) {
+      // Pre-migration-0008 schema: the per-event columns don't exist yet.
+      // Read-only backward compatibility — surface the legacy URL for all
+      // three events until the operator runs 0008 and saves per-event URLs.
+      console.warn(
+        "Settings: businesses table is missing the per-event webhook columns; falling back to legacy n8n_webhook_url for display. Run supabase/migrations/0008_three_webhook_urls.sql.",
+        { businessId: business.id }
+      );
+      const { data: legacyRow, error: legacyError } = await supabase
+        .from("businesses")
+        .select("n8n_webhook_url, avg_job_value")
+        .eq("id", business.id)
+        .single();
+      if (legacyRow) {
+        webhookRow = {
+          n8n_webhook_url: legacyRow.n8n_webhook_url,
+          avg_job_value: legacyRow.avg_job_value,
+        };
+      } else if (legacyError) {
+        businessDetailsError = "Failed to load automation settings.";
+        console.error("Settings: failed to load legacy webhook URL:", legacyError.message, {
+          businessId: business.id,
+        });
+      }
+    } else {
+      businessDetailsError = "Failed to load business settings.";
+      console.error("Settings: failed to load business webhook details:", businessDetailsResult.error.message, {
+        businessId: business.id,
+      });
+    }
+  }
+
+  const avgJobValue =
+    !businessDetailsResult.error
+      ? ((businessDetailsResult.data as { avg_job_value?: number | null } | null)?.avg_job_value ?? null)
+      : (webhookRow as { avg_job_value?: number | null } | null)?.avg_job_value ?? null;
+
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://your-relayos-domain.vercel.app";
   const snippet = `<script src="${appOrigin}/embed.js" data-widget-key="${business.public_widget_key}"></script>`;
 
-  const legacyWebhook = businessDetailsData?.n8n_webhook_url ?? "";
-  const webhookUrls = {
-    n8n_webhook_url_lead_qualified: legacyWebhook,
-    n8n_webhook_url_lead_escalated: legacyWebhook,
-    n8n_webhook_url_booking_created: legacyWebhook,
-  };
+  const webhookUrls = resolveAutomationWebhookUrls(webhookRow);
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6 sm:p-8">
@@ -108,6 +152,14 @@ export default async function SettingsPage({
           {searchParams.calendar_error}
         </p>
       )}
+      {businessDetailsError && (
+        <p
+          role="alert"
+          className="mt-6 rounded-lg bg-alert-500/10 px-3 py-2.5 text-sm text-alert-700"
+        >
+          {businessDetailsError} Please refresh and try again.
+        </p>
+      )}
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[190px_1fr]">
         <aside className="sticky top-8 hidden lg:block">
@@ -128,7 +180,7 @@ export default async function SettingsPage({
               businessId={business.id}
               initialName={business.name}
               initialBrandColor={business.brand_color}
-              initialAvgJobValue={businessDetailsData?.avg_job_value ?? null}
+              initialAvgJobValue={avgJobValue}
             />
           </SettingsSection>
 

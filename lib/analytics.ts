@@ -69,7 +69,7 @@ export async function getAnalyticsSummary(businessId: string, days = 30): Promis
   const supabase = createServerSupabaseClient();
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: leads }, { data: bookings }, { data: business }] = await Promise.all([
+  const [leadsResult, bookingsResult, businessResult] = await Promise.all([
     supabase.from("leads").select("id, status, created_at").eq("business_id", businessId).gte("created_at", since),
     supabase
       .from("bookings")
@@ -79,6 +79,13 @@ export async function getAnalyticsSummary(businessId: string, days = 30): Promis
       .gte("created_at", since),
     supabase.from("businesses").select("avg_job_value").eq("id", businessId).single(),
   ]);
+  if (leadsResult.error) throw new Error(`Failed to load analytics leads: ${leadsResult.error.message}`);
+  if (bookingsResult.error) throw new Error(`Failed to load analytics bookings: ${bookingsResult.error.message}`);
+  if (businessResult.error) throw new Error(`Failed to load business analytics settings: ${businessResult.error.message}`);
+
+  const { data: leads } = leadsResult;
+  const { data: bookings } = bookingsResult;
+  const { data: business } = businessResult;
 
   const totalLeads = leads?.length ?? 0;
   const qualifiedLeads = leads?.filter((l) => l.status === "qualified" || l.status === "booked").length ?? 0;
@@ -88,12 +95,15 @@ export async function getAnalyticsSummary(businessId: string, days = 30): Promis
 
   // Sample response time across recent conversations for this business —
   // capped at 50 to keep this fast on a live dashboard load.
-  const { data: recentConversations } = await supabase
+  const { data: recentConversations, error: conversationsError } = await supabase
     .from("conversations")
     .select("id")
     .eq("business_id", businessId)
     .order("created_at", { ascending: false })
     .limit(50);
+  if (conversationsError) {
+    throw new Error(`Failed to load analytics conversations: ${conversationsError.message}`);
+  }
 
   const conversationIds = recentConversations?.map((c) => c.id) ?? [];
 
@@ -103,11 +113,12 @@ export async function getAnalyticsSummary(businessId: string, days = 30): Promis
   if (conversationIds.length > 0) {
     // Batched query: fetch all messages for all conversations in a single query
     // instead of N+1 queries per conversation.
-    const { data: allMessages } = await supabase
+    const { data: allMessages, error: messagesError } = await supabase
       .from("messages")
       .select("conversation_id, role, created_at")
       .in("conversation_id", conversationIds)
       .order("created_at", { ascending: true });
+    if (messagesError) throw new Error(`Failed to load analytics messages: ${messagesError.message}`);
 
     if (allMessages && allMessages.length > 0) {
     // Group messages by conversation_id

@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { organizationName, businessName } = await req.json();
+  let body: { organizationName?: string; businessName?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const { organizationName, businessName } = body;
   console.log("Provision request:", { organizationName, businessName });
   
   if (!organizationName?.trim() || !businessName?.trim()) {
@@ -33,7 +39,11 @@ export async function POST(req: NextRequest) {
   const service = createServiceRoleClient();
 
   // Guard against re-provisioning if this route is ever called twice.
-  const { data: existing } = await service.from("users").select("id").eq("id", user.id).maybeSingle();
+  const { data: existing, error: existingError } = await service.from("users").select("id").eq("id", user.id).maybeSingle();
+  if (existingError) {
+    console.error("Provision existing-user check failed:", existingError.message, { userId: user.id });
+    return NextResponse.json({ error: "Couldn't verify account state" }, { status: 500 });
+  }
   console.log("Existing user check:", existing ? "ALREADY EXISTS" : "NEW USER");
   
   if (existing) {
@@ -62,6 +72,7 @@ export async function POST(req: NextRequest) {
   console.log("User insert:", userError ? `FAILED: ${userError.message}` : "SUCCESS");
   
   if (userError) {
+    await cleanupProvisionedOrganization(service, organization.id);
     return NextResponse.json({ error: `Failed to create user record: ${userError.message}` }, { status: 500 });
   }
 
@@ -74,13 +85,20 @@ export async function POST(req: NextRequest) {
   console.log("Business insert:", business?.id || "FAILED", businessError?.message || "");
   
   if (businessError || !business) {
+    await cleanupProvisionedOrganization(service, organization.id);
     return NextResponse.json({ error: `Failed to create business: ${businessError?.message}` }, { status: 500 });
   }
 
   // Force session refresh so the client knows about the new user record
-  await supabase.auth.refreshSession();
+  const { error: refreshError } = await supabase.auth.refreshSession();
+  if (refreshError) console.warn("Provision succeeded but session refresh failed:", refreshError.message, { userId: user.id });
   
   console.log("=== PROVISION COMPLETE ===");
 
   return NextResponse.json({ organizationId: organization.id, businessId: business.id, widgetKey: business.public_widget_key });
+}
+
+async function cleanupProvisionedOrganization(service: ReturnType<typeof createServiceRoleClient>, organizationId: string) {
+  const { error } = await service.from("organizations").delete().eq("id", organizationId);
+  if (error) console.error("Failed to clean up partial organization provisioning:", error.message, { organizationId });
 }

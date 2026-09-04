@@ -22,6 +22,10 @@ services:
     environment:
       - N8N_SECURE_COOKIE=false # set true once you're behind HTTPS
       - GENERIC_TIMEZONE=UTC
+      # Required by the imported RelayOS Code nodes when signature checking is enabled.
+      # Set this to the same value saved under Settings → Automations.
+      - RELAYOS_WEBHOOK_SECRET=${RELAYOS_WEBHOOK_SECRET:?set RELAYOS_WEBHOOK_SECRET}
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto
     volumes:
       - n8n_data:/home/node/.n8n
 

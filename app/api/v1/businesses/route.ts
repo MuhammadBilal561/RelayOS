@@ -11,18 +11,30 @@ export async function POST(req: NextRequest) {
   const supabase = createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+  if (authError) return NextResponse.json({ error: "Authentication unavailable" }, { status: 503 });
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { data: userRow } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
+  const { data: userRow, error: userError } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
+  if (userError) {
+    console.error("Business creation user lookup failed:", userError.message, { userId: user.id });
+    return NextResponse.json({ error: "Couldn't verify account" }, { status: 503 });
+  }
   if (!userRow) return NextResponse.json({ error: "Account not fully set up" }, { status: 403 });
 
-  const { name, industry } = await req.json();
-  if (!name?.trim()) return NextResponse.json({ error: "name is required" }, { status: 400 });
+  let body: { name?: string; industry?: string | null };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const { name, industry } = body;
+  if (typeof name !== "string" || !name.trim()) return NextResponse.json({ error: "name is required" }, { status: 400 });
 
   const { data: business, error } = await supabase
     .from("businesses")
-    .insert({ organization_id: userRow.organization_id, name, industry: industry || null })
+    .insert({ organization_id: userRow.organization_id, name: name.trim(), industry: typeof industry === "string" && industry.trim() ? industry.trim() : null })
     .select("id, name")
     .single();
 

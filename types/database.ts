@@ -27,9 +27,17 @@ export interface BusinessRow {
   brand_color: string;
   system_persona: string | null;
   n8n_webhook_url: string | null;
+  // Per-event n8n webhook URLs (migration 0008_three_webhook_urls.sql).
+  n8n_webhook_url_lead_qualified: string | null;
+  n8n_webhook_url_lead_escalated: string | null;
+  n8n_webhook_url_booking_created: string | null;
+  // HMAC secret used to sign outbound automation webhook requests
+  // (migration 0009_webhook_signing_secret.sql).
+  n8n_webhook_secret: string | null;
   avg_job_value: number | null;
   created_at: string;
 }
+
 
 export interface KbDocumentRow {
   id: string;

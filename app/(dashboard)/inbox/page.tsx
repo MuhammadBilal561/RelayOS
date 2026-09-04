@@ -26,17 +26,23 @@ export default async function InboxPage() {
 
   // Two plain queries instead of a PostgREST embedded-relation select —
   // see the note in inbox/[conversationId]/page.tsx for why.
-  const { data: conversationRows } = await supabase
+  const { data: conversationRows, error: conversationError } = await supabase
     .from("conversations")
     .select("id, status, created_at, summary_text, lead_id")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .limit(50);
+  if (conversationError) throw new Error(`Failed to load conversations: ${conversationError.message}`);
 
   const leadIds = [...new Set((conversationRows ?? []).map((c) => c.lead_id))];
-  const { data: leadRows } = leadIds.length
-    ? await supabase.from("leads").select("id, name, email, score").in("id", leadIds)
-    : { data: [] };
+  const { data: leadRows, error: leadError } = leadIds.length
+    ? await supabase
+        .from("leads")
+        .select("id, name, email, score")
+        .eq("business_id", business.id)
+        .in("id", leadIds)
+    : { data: [], error: null };
+  if (leadError) throw new Error(`Failed to load conversation contacts: ${leadError.message}`);
 
   const leadsById = new Map((leadRows ?? []).map((l) => [l.id, l]));
   const conversations = (conversationRows ?? []).map((c) => ({ ...c, leads: leadsById.get(c.lead_id) ?? null }));

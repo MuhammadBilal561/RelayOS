@@ -21,14 +21,7 @@ import { KpiCard } from "@/components/dashboard/kpi-card";
 async function getKpis(businessId: string) {
   const supabase = createServerSupabaseClient();
 
-  const [
-    { count: totalLeads },
-    { count: qualifiedLeads },
-    { count: escalated },
-    { count: conversations },
-    { count: bookedLeads },
-    { data: scoreRows },
-  ] = await Promise.all([
+  const results = await Promise.all([
     supabase.from("leads").select("id", { count: "exact", head: true }).eq("business_id", businessId),
     supabase
       .from("leads")
@@ -48,6 +41,17 @@ async function getKpis(businessId: string) {
       .eq("status", "booked"),
     supabase.from("leads").select("score").eq("business_id", businessId),
   ]);
+  const failed = results.find((result) => result.error);
+  if (failed?.error) throw new Error(`Failed to load dashboard metrics: ${failed.error.message}`);
+
+  const [
+    { count: totalLeads },
+    { count: qualifiedLeads },
+    { count: escalated },
+    { count: conversations },
+    { count: bookedLeads },
+    { data: scoreRows },
+  ] = results;
 
   const scores = (scoreRows ?? []).map((r) => r.score);
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;

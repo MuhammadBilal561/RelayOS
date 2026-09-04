@@ -234,13 +234,20 @@ Open [http://localhost:3000](http://localhost:3000).
    project and enable the **Google Calendar API**.
 2. Configure the **OAuth consent screen** (External works for testing — add
    yourself as a test user).
-3. Create an **OAuth client ID** of type "Web application" and add
-   `http://localhost:3000/api/integrations/google-calendar/callback` as an
-   authorized redirect URI.
+3. Create an **OAuth client ID** of type "Web application" and add the exact
+   value of `GOOGLE_REDIRECT_URI` as an authorized redirect URI. For local
+   development this is
+   `http://localhost:3000/api/integrations/google-calendar/callback`; for a
+   hosted deployment it must be
+   `https://<public-app-host>/api/integrations/google-calendar/callback`
+   (including scheme, host, path, and any configured port).
 4. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` in
    your environment.
 5. In the dashboard, open **Settings** and click **Connect** under Google
    Calendar to authorize the account the widget books on.
+
+Google compares redirect URIs byte-for-byte. Do not leave the localhost value
+in a hosted deployment, and register each production hostname separately.
 
 ## n8n automations
 
@@ -394,11 +401,12 @@ the build can statically analyze pages — no real secrets ever touch CI.
 | `GOOGLE_CLIENT_SECRET` | No* | Google OAuth client secret |
 | `GOOGLE_REDIRECT_URI` | No* | Google OAuth redirect URI |
 | `NEXT_PUBLIC_APP_URL` | No | App URL used for embed snippets |
-| `RATE_LIMITER_BACKEND` | No | `memory` or `upstash-redis` (default `memory`) |
-| `UPSTASH_REDIS_REST_URL` | No | Upstash Redis REST URL |
-| `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis REST token |
+| `RATE_LIMITER_BACKEND` | Yes in production | `upstash-redis` in production; `memory` is development-only |
+| `UPSTASH_REDIS_REST_URL` | Yes in production | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Yes in production | Upstash Redis REST token |
 | `RATE_LIMIT_WINDOW_MS` | No | Rate-limit window (default `60000`) |
 | `RATE_LIMIT_MAX_REQUESTS` | No | Max requests per window (default `12`) |
+| `RATE_LIMIT_PREFIX` | No | Upstash key prefix (default `rl:`) |
 
 \* Required only if you use the corresponding feature (token encryption /
 calendar booking).
@@ -411,9 +419,15 @@ calendar booking).
   `GOOGLE_CLIENT_SECRET` are never shipped to the client bundle.
 - **OAuth tokens at rest** are encrypted with AES-256-GCM using
   `ENCRYPTION_KEY` (run `openssl rand -hex 32` to generate one).
+- Existing installations created before token encryption must run
+  `node scripts/backfill-encrypted-calendar-tokens.mjs` once with the same
+  `ENCRYPTION_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, and `SUPABASE_SECRET_KEY` used
+  by the app. The script is idempotent and skips `v1:` ciphertext; rotate the
+  key only with an explicit re-encryption migration.
 - **Rate limiting** protects public endpoints from abusive traffic and from
-  draining your free-tier AI quota; an Upstash Redis backend is supported for
-  multi-instance deployments.
+  draining your free-tier AI quota. Production refuses the process-local
+  in-memory backend; configure Upstash Redis before serving traffic from
+  multiple instances.
 - **HMAC-signed webhooks** let n8n verify that automation events really come
   from your app.
 - **Input validation** on every public endpoint (length limits, required

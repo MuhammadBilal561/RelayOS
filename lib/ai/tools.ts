@@ -116,6 +116,9 @@ export async function executeTool(
       const proposedStartIso = args.proposed_start_iso as string | undefined;
       if (!proposedStartIso) return { error: "proposed_start_iso is required" };
       const durationMinutes = typeof args.duration_minutes === "number" ? args.duration_minutes : 30;
+      if (!Number.isFinite(durationMinutes) || durationMinutes <= 0 || durationMinutes > 24 * 60) {
+        return { error: "duration_minutes must be between 1 and 1440" };
+      }
 
       const result = await checkAvailability(ctx.businessId, proposedStartIso, durationMinutes);
       if (!result.connected) {
@@ -131,7 +134,12 @@ export async function executeTool(
       const summary = (args.summary as string | undefined) ?? "RelayOS booking";
       if (!startIso) return { error: "start_iso is required" };
       const durationMinutes = typeof args.duration_minutes === "number" ? args.duration_minutes : 30;
-      const endIso = new Date(new Date(startIso).getTime() + durationMinutes * 60_000).toISOString();
+      if (!Number.isFinite(durationMinutes) || durationMinutes <= 0 || durationMinutes > 24 * 60) {
+        return { error: "duration_minutes must be between 1 and 1440" };
+      }
+      const startTime = new Date(startIso);
+      if (Number.isNaN(startTime.getTime())) return { error: "start_iso must be a valid ISO 8601 datetime" };
+      const endIso = new Date(startTime.getTime() + durationMinutes * 60_000).toISOString();
 
       // Hard safety guard: never book a slot we haven't confirmed is free.
       // The system prompt tells the model to call check_availability first,

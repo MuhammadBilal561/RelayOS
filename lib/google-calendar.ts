@@ -5,11 +5,9 @@ import { encryptToken, decryptToken, isEncrypted } from "@/lib/crypto";
 const SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.readonly"];
 
 function persistToken(token: string): string {
-  try {
-    return encryptToken(token);
-  } catch {
-    return token;
-  }
+  // Never silently downgrade OAuth credentials to plaintext. A missing or
+  // malformed encryption key must fail the connection instead.
+  return encryptToken(token);
 }
 
 function getOAuthClient() {
@@ -21,6 +19,15 @@ function getOAuthClient() {
     throw new Error(
       "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI must be set — see README's Phase 2 setup section."
     );
+  }
+  try {
+    const parsedRedirectUri = new URL(redirectUri);
+    if (process.env.NODE_ENV === "production" && parsedRedirectUri.protocol !== "https:") {
+      throw new Error("GOOGLE_REDIRECT_URI must use https in production");
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("must use https")) throw error;
+    throw new Error("GOOGLE_REDIRECT_URI must be a valid absolute URL");
   }
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
@@ -53,11 +60,12 @@ export async function connectGoogleCalendar(businessId: string, code: string) {
 
   let refreshToken = tokens.refresh_token ?? null;
   if (!refreshToken) {
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("calendar_connections")
       .select("refresh_token")
       .eq("business_id", businessId)
       .maybeSingle();
+    if (existingError) throw new Error(`Failed to read existing calendar connection: ${existingError.message}`);
     if (existing?.refresh_token) {
       refreshToken = isEncrypted(existing.refresh_token)
         ? decryptToken(existing.refresh_token)
@@ -114,12 +122,13 @@ export async function connectGoogleCalendar(businessId: string, code: string) {
  */
 async function getCalendarClientForBusiness(businessId: string) {
   const supabase = createServiceRoleClient();
-  const { data: connection } = await supabase
+  const { data: connection, error: connectionError } = await supabase
     .from("calendar_connections")
     .select("access_token, refresh_token, token_expires_at, calendar_id")
     .eq("business_id", businessId)
     .maybeSingle();
 
+  if (connectionError) throw new Error(`Failed to load calendar connection: ${connectionError.message}`);
   if (!connection) return null;
 
   const accessToken = isEncrypted(connection.access_token)
@@ -138,16 +147,23 @@ async function getCalendarClientForBusiness(businessId: string) {
 
   // googleapis refreshes automatically on demand, but we persist the new
   // access token so we're not re-refreshing on every single call.
-  client.on("tokens", async (tokens) => {
+  client.on("tokens", (tokens) => {
     if (!tokens.access_token) return;
-    await supabase
-      .from("calendar_connections")
-      .update({
-        access_token: persistToken(tokens.access_token),
-        token_expires_at: new Date(tokens.expiry_date ?? Date.now() + 3600_000).toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("business_id", businessId);
+    void (async () => {
+      const { error } = await supabase
+        .from("calendar_connections")
+        .update({
+          access_token: persistToken(tokens.access_token as string),
+          token_expires_at: new Date(tokens.expiry_date ?? Date.now() + 3600_000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("business_id", businessId);
+      if (error) {
+        console.error("Failed to persist refreshed Google access token:", error.message, { businessId });
+      }
+    })().catch((error: unknown) => {
+      console.error("Failed to process refreshed Google access token:", error, { businessId });
+    });
   });
 
   return { calendar: google.calendar({ version: "v3", auth: client }), calendarId: connection.calendar_id };
@@ -170,12 +186,19 @@ export async function checkAvailability(
   startIso: string,
   durationMinutes = 30
 ): Promise<AvailabilityResult> {
+  if (!Number.isFinite(durationMinutes) || durationMinutes <= 0 || durationMinutes > 24 * 60) {
+    throw new Error("durationMinutes must be between 1 and 1440");
+  }
+  const requestedStart = new Date(startIso);
+  if (Number.isNaN(requestedStart.getTime())) {
+    throw new Error("startIso must be a valid ISO 8601 datetime");
+  }
   const ctx = await getCalendarClientForBusiness(businessId);
   if (!ctx) return { connected: false, available: false };
 
   const stepMs = 30 * 60_000;
   const durationMs = durationMinutes * 60_000;
-  let cursorStart = new Date(startIso);
+  let cursorStart = requestedStart;
 
   for (let attempt = 0; attempt < 8; attempt++) {
     const cursorEnd = new Date(cursorStart.getTime() + durationMs);
@@ -210,7 +233,7 @@ export async function createCalendarEvent(
   const ctx = await getCalendarClientForBusiness(businessId);
   if (!ctx) return null;
 
-  const { data } = await ctx.calendar.events.insert({
+  const { data, status } = await ctx.calendar.events.insert({
     calendarId: ctx.calendarId,
     requestBody: {
       summary: params.summary,
@@ -221,5 +244,6 @@ export async function createCalendarEvent(
     },
   });
 
-  return data.id ?? null;
+  if (!data.id) throw new Error(`Google Calendar created an event without an id (HTTP ${status ?? "unknown"})`);
+  return data.id;
 }

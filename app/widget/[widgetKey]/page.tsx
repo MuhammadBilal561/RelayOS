@@ -6,12 +6,13 @@ export const dynamic = "force-dynamic";
 
 export default async function WidgetPage({ params }: { params: { widgetKey: string } }) {
   const supabase = createServiceRoleClient();
-  const { data: business } = await supabase
+  const { data: business, error } = await supabase
     .from("businesses")
     .select("id, name, brand_color")
     .eq("public_widget_key", params.widgetKey)
     .single();
 
+  if (error) throw new Error(`Failed to load widget business: ${error.message}`);
   if (!business) notFound();
 
   return (

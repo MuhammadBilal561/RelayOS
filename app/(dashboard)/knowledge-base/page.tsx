@@ -13,16 +13,18 @@ export default async function KnowledgeBasePage() {
   const business = await getCurrentBusiness();
   const supabase = createServerSupabaseClient();
 
-  const { data: documents } = await supabase
+  const { data: documents, error: documentsError } = await supabase
     .from("kb_documents")
     .select("id, title, created_at, content_text")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  if (documentsError) throw new Error(`Failed to load knowledge base documents: ${documentsError.message}`);
 
   const docIds = (documents ?? []).map((d) => d.id);
-  const { data: chunkRows } = docIds.length
-    ? await supabase.from("kb_chunks").select("document_id")
-    : { data: [] };
+  const { data: chunkRows, error: chunksError } = docIds.length
+    ? await supabase.from("kb_chunks").select("document_id").eq("business_id", business.id).in("document_id", docIds)
+    : { data: [], error: null };
+  if (chunksError) throw new Error(`Failed to load knowledge base chunks: ${chunksError.message}`);
 
   const chunkCounts = new Map<string, number>();
   for (const chunk of chunkRows ?? []) {

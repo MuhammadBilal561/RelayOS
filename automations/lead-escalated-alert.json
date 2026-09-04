@@ -6,7 +6,7 @@
         "httpMethod": "POST",
         "path": "relay-lead-escalated",
         "responseMode": "onReceived",
-        "options": {}
+        "options": { "rawBody": true }
       },
       "id": "webhook_trigger",
       "name": "RelayOS Webhook",
@@ -18,17 +18,14 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Verify RelayOS webhook signature\n// Requires credential: relayOsWebhookSecret (per-business secret)\n\nconst signature = $request.headers[\"x-relayos-signature\"];\nconst timestamp = $request.headers[\"x-relayos-timestamp\"];\nconst nonce = $request.headers[\"x-relayos-nonce\"];\nconst rawBody = $request.rawBody;\n\n// 1. Check required headers exist\nif (!signature || !timestamp || !nonce) {\n  throw new Error(\"Missing RelayOS signature headers (x-relayos-signature, x-relayos-timestamp, x-relayos-nonce)\");\n}\n\n// 2. Check signature format\nif (!signature.startsWith(\"v1=\")) {\n  throw new Error(\"Invalid signature format: must start with 'v1='\");\n}\n\n// 3. Parse timestamp safely\nconst requestTime = parseInt(timestamp, 10);\nif (isNaN(requestTime)) {\n  throw new Error(\"Invalid timestamp: not a number\");\n}\n\n// 4. Check timestamp drift (5 minutes = 300 seconds)\nconst now = Math.floor(Date.now() / 1000);\nif (Math.abs(now - requestTime) > 300) {\n  throw new Error(\"Timestamp out of acceptable range (replay protection: 5 minutes)\");\n}\n\n// 5. Raw body must exist\nif (rawBody === undefined || rawBody === null) {\n  throw new Error(\"Missing raw request body for signature verification\");\n}\n\n// 6. Reconstruct canonical string EXACTLY: timestamp.nonce.rawBody\nconst canonical = `${timestamp}.${nonce}.${rawBody}`;\n\n// 7. Get per-business secret from n8n Credentials\nconst secret = $credentials.relayOsWebhookSecret;\nif (!secret) {\n  throw new Error(\"Per-business webhook secret not configured in credentials\");\n}\n\n// 8. Compute expected signature\nconst crypto = require('crypto');\nconst expectedSignature = 'v1=' + crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n\n// 9. Timing-safe comparison\nconst sigBuffer = Buffer.from(signature, 'utf8');\nconst expectedBuffer = Buffer.from(expectedSignature, 'utf8');\nif (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {\n  throw new Error(\"Invalid signature\");\n}\n\n// 10. Verification passed - pass through original payload unchanged\nreturn [{ json: $json }];",
+        "jsCode": "// Verify the exact RelayOS request body before processing it.\n// Configure RELAYOS_WEBHOOK_SECRET in the n8n host environment and set\n// NODE_FUNCTION_ALLOW_BUILTIN=crypto. RelayOS signs timestamp.nonce.rawBody.\n\nconst input = $input.first().json;\nconst headers = input.headers ?? {};\nconst signature = headers[\"x-relayos-signature\"];\nconst timestamp = headers[\"x-relayos-timestamp\"];\nconst nonce = headers[\"x-relayos-nonce\"];\nconst rawBody = typeof input.rawBody === \"string\" ? input.rawBody : Buffer.from(input.rawBody ?? \"\").toString(\"utf8\");\nconst secret = $env.RELAYOS_WEBHOOK_SECRET;\n\nif (!signature || !timestamp || !nonce || !/^v1=[0-9a-f]{64}$/.test(signature)) {\n  throw new Error(\"Missing or malformed RelayOS signature headers\");\n}\nif (!/^\\d+$/.test(timestamp)) throw new Error(\"Invalid RelayOS timestamp\");\nconst requestTime = Number(timestamp);\nif (!Number.isSafeInteger(requestTime) || Math.abs(Math.floor(Date.now() / 1000) - requestTime) > 300) {\n  throw new Error(\"RelayOS timestamp is outside the five-minute replay window\");\n}\nif (!rawBody || !secret) throw new Error(\"Raw body or RELAYOS_WEBHOOK_SECRET is missing\");\n\nconst crypto = require(\"crypto\");\nconst canonical = `${timestamp}.${nonce}.${rawBody}`;\nconst expected = `v1=${crypto.createHmac(\"sha256\", secret).update(canonical).digest(\"hex\")}`;\nconst actualBuffer = Buffer.from(signature, \"utf8\");\nconst expectedBuffer = Buffer.from(expected, \"utf8\");\nif (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {\n  throw new Error(\"Invalid RelayOS signature\");\n}\n\nreturn [{ json: input.body }];",
         "options": {}
       },
       "id": "verify_signature",
       "name": "Verify RelayOS Signature",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300],
-      "credentials": {
-        "relayOsWebhookSecret": "relayOsWebhookSecret"
-      }
+      "position": [480, 300]
     },
     {
       "parameters": {

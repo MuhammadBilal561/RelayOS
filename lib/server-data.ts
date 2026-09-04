@@ -27,21 +27,27 @@ export async function getBusinessByWidgetKey(widgetKey: string) {
     .eq("public_widget_key", key)
     .maybeSingle();
 
-  if (error || !data) {
-    if (error) console.error("Widget key lookup failed:", error.message, key);
-    return null;
+  if (error && error.code !== "PGRST116") {
+    console.error("Widget key lookup failed:", error.message);
+    throw new Error(`Failed to resolve widget: ${error.message}`);
   }
+  if (!data) return null;
   return data;
 }
 
 export async function getBusinessById(businessId: string) {
   const { data, error } = await supabaseAdmin()
     .from("businesses")
-    .select("id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, n8n_webhook_url, created_at")
+    .select(
+      "id, name, brand_color, system_persona, timezone, organization_id, industry, public_widget_key, " +
+        "n8n_webhook_url, n8n_webhook_url_lead_qualified, n8n_webhook_url_lead_escalated, " +
+        "n8n_webhook_url_booking_created, n8n_webhook_secret, created_at"
+    )
     .eq("id", businessId)
     .single();
 
-  if (error || !data) return null;
+  if (error) throw new Error(`Failed to load business: ${error.message}`);
+  if (!data) return null;
   return data;
 }
 
@@ -52,7 +58,8 @@ export async function getLeadById(leadId: string): Promise<LeadRow | null> {
     .eq("id", leadId)
     .single();
 
-  if (error || !data) return null;
+  if (error) throw new Error(`Failed to load lead: ${error.message}`);
+  if (!data) return null;
   return data;
 }
 
@@ -63,17 +70,20 @@ export async function getConversationById(conversationId: string): Promise<Conve
     .eq("id", conversationId)
     .single();
 
-  if (error || !data) return null;
+  if (error) throw new Error(`Failed to load conversation: ${error.message}`);
+  if (!data) return null;
   return data;
 }
 
 export async function getOrCreateConversation(businessId: string, visitorSessionId: string) {
-  let { data: lead } = await supabaseAdmin()
+  const leadLookup = await supabaseAdmin()
     .from("leads")
     .select("id, status")
     .eq("business_id", businessId)
     .eq("visitor_session_id", visitorSessionId)
     .maybeSingle();
+  if (leadLookup.error) throw new Error(`Failed to find lead: ${leadLookup.error.message}`);
+  let lead = leadLookup.data;
 
   if (!lead) {
     const { data: newLead, error } = await supabaseAdmin()
@@ -81,11 +91,22 @@ export async function getOrCreateConversation(businessId: string, visitorSession
       .insert({ business_id: businessId, visitor_session_id: visitorSessionId, source: "widget" })
       .select("id, status")
       .single();
-    if (error || !newLead) throw new Error(`Failed to create lead: ${error?.message}`);
-    lead = newLead;
+    if (error && error.code !== "23505") throw new Error(`Failed to create lead: ${error.message}`);
+    if (newLead) {
+      lead = newLead;
+    } else {
+      const retry = await supabaseAdmin()
+        .from("leads")
+        .select("id, status")
+        .eq("business_id", businessId)
+        .eq("visitor_session_id", visitorSessionId)
+        .single();
+      if (retry.error || !retry.data) throw new Error(`Failed to create lead: ${retry.error?.message ?? "lead was not returned"}`);
+      lead = retry.data;
+    }
   }
 
-  let { data: conversation } = await supabaseAdmin()
+  const conversationLookup = await supabaseAdmin()
     .from("conversations")
     .select("id")
     .eq("lead_id", lead.id)
@@ -93,6 +114,8 @@ export async function getOrCreateConversation(businessId: string, visitorSession
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (conversationLookup.error) throw new Error(`Failed to find conversation: ${conversationLookup.error.message}`);
+  let conversation = conversationLookup.data;
 
   if (!conversation) {
     const { data: newConversation, error } = await supabaseAdmin()
@@ -100,8 +123,21 @@ export async function getOrCreateConversation(businessId: string, visitorSession
       .insert({ lead_id: lead.id, business_id: businessId, channel: "widget" })
       .select("id")
       .single();
-    if (error || !newConversation) throw new Error(`Failed to create conversation: ${error?.message}`);
-    conversation = newConversation;
+    if (error && error.code !== "23505") throw new Error(`Failed to create conversation: ${error.message}`);
+    if (newConversation) {
+      conversation = newConversation;
+    } else {
+      const retry = await supabaseAdmin()
+        .from("conversations")
+        .select("id")
+        .eq("lead_id", lead.id)
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (retry.error || !retry.data) throw new Error(`Failed to create conversation: ${retry.error?.message ?? "conversation was not returned"}`);
+      conversation = retry.data;
+    }
   }
 
   return { leadId: lead.id, conversationId: conversation.id };
@@ -172,6 +208,19 @@ export async function insertBooking(booking: {
   end_time: string;
   calendar_event_id: string;
 }) {
+  // bookings carries both ids, so validate the relationship explicitly. The
+  // separate foreign keys only guarantee that each row exists; without this
+  // check a booking could be attached to a lead from another business.
+  const { data: lead, error: leadError } = await supabaseAdmin()
+    .from("leads")
+    .select("id")
+    .eq("id", booking.lead_id)
+    .eq("business_id", booking.business_id)
+    .maybeSingle();
+
+  if (leadError) throw new Error(`Failed to validate booking contact: ${leadError.message}`);
+  if (!lead) throw new Error("Failed to insert booking: lead does not belong to business");
+
   const { data, error } = await supabaseAdmin()
     .from("bookings")
     .insert(booking)
@@ -258,10 +307,12 @@ export async function ingestKnowledgeDocument(businessId: string, document: {
 }
 
 export async function getLeadWithVisitorMessages(leadId: string, conversationId: string) {
-  const [{ data: lead }, { data: visitorMessages }] = await Promise.all([
+  const [leadResult, messagesResult] = await Promise.all([
     supabaseAdmin().from("leads").select("name, email, phone, service_interest").eq("id", leadId).single(),
     supabaseAdmin().from("messages").select("content").eq("conversation_id", conversationId).eq("role", "visitor"),
   ]);
 
-  return { lead, visitorMessages: visitorMessages ?? [] };
+  if (leadResult.error) throw new Error(`Failed to load lead for scoring: ${leadResult.error.message}`);
+  if (messagesResult.error) throw new Error(`Failed to load messages for scoring: ${messagesResult.error.message}`);
+  return { lead: leadResult.data, visitorMessages: messagesResult.data ?? [] };
 }

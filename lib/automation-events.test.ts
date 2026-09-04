@@ -25,6 +25,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { emitAutomationEvent } from "@/lib/automation-events";
+import { verifyWebhookSignature } from "@/lib/webhook-signing";
 
 beforeEach(() => {
   chainResults.clear();
@@ -75,6 +76,43 @@ describe("emitAutomationEvent", () => {
       "automation_events",
       expect.objectContaining({ delivered_at: expect.any(String) })
     );
+  });
+
+  it("signs the exact request body sent to the event-specific URL", async () => {
+    const secret = "test-signing-secret";
+    chainResults.set("automation_events", { data: { id: "evt_signed" }, error: null });
+    chainResults.set("businesses", {
+      data: {
+        n8n_webhook_url_booking_created: "https://n8n.example.com/webhook/booking",
+        n8n_webhook_secret: secret,
+      },
+      error: null,
+    });
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await emitAutomationEvent("biz_1", "booking.created", { bookingId: "bk_signed" });
+
+    const [url, request] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://n8n.example.com/webhook/booking");
+    expect(request.headers).toEqual(
+      expect.objectContaining({
+        "Content-Type": "application/json",
+        "x-relayos-signature": expect.stringMatching(/^v1=/),
+        "x-relayos-timestamp": expect.any(String),
+        "x-relayos-nonce": expect.any(String),
+      })
+    );
+    const headers = request.headers as Record<string, string>;
+    expect(
+      verifyWebhookSignature(
+        secret,
+        request.body as string,
+        headers["x-relayos-signature"],
+        headers["x-relayos-timestamp"],
+        headers["x-relayos-nonce"]
+      ).valid
+    ).toBe(true);
   });
 
   it("records a delivery_error instead of throwing when the webhook returns a non-2xx status", async () => {

@@ -22,11 +22,20 @@ export const getCurrentBusiness = cache(async (): Promise<CurrentBusiness> => {
   const supabase = createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
 
+  if (authError) {
+    console.error("Current business auth lookup failed:", authError.message);
+    redirect("/login");
+  }
   if (!user) redirect("/login");
 
-  const { data: userRow } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
+  const { data: userRow, error: userError } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
+  if (userError) {
+    console.error("Current business user lookup failed:", userError.message, { userId: user.id });
+    redirect("/signup");
+  }
   if (!userRow?.organization_id) {
     console.error("User has no organization_id:", user.id);
     redirect("/signup");
@@ -35,17 +44,19 @@ export const getCurrentBusiness = cache(async (): Promise<CurrentBusiness> => {
   const activeBusinessId = cookies().get(ACTIVE_BUSINESS_COOKIE)?.value;
 
   if (activeBusinessId) {
-    const { data: cookieBusiness } = await supabase
+    const { data: cookieBusiness, error: cookieError } = await supabase
       .from("businesses")
       .select("id, name, public_widget_key, brand_color")
       .eq("id", activeBusinessId)
       .eq("organization_id", userRow.organization_id) // ownership check — a stale/tampered cookie can't leak another org's business
       .maybeSingle();
 
-    if (cookieBusiness) return cookieBusiness;
+    if (cookieError) {
+      console.error("Active business lookup failed:", cookieError.message, { activeBusinessId });
+    } else if (cookieBusiness) return cookieBusiness;
   }
 
-  const { data: business } = await supabase
+  const { data: business, error: businessError } = await supabase
     .from("businesses")
     .select("id, name, public_widget_key, brand_color")
     .eq("organization_id", userRow.organization_id)
@@ -53,6 +64,10 @@ export const getCurrentBusiness = cache(async (): Promise<CurrentBusiness> => {
     .limit(1)
     .maybeSingle();
 
+  if (businessError) {
+    console.error("Default business lookup failed:", businessError.message, { organizationId: userRow.organization_id });
+    throw new Error(`Failed to load business: ${businessError.message}`);
+  }
   if (!business) {
     console.error("No business found for organization:", userRow.organization_id);
     redirect("/signup");
@@ -66,17 +81,28 @@ export const getBusinessesForCurrentUser = cache(async (): Promise<{ id: string;
   const supabase = createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (authError || !user) {
+    if (authError) console.error("Business list auth lookup failed:", authError.message);
+    return [];
+  }
 
-  const { data: userRow } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
-  if (!userRow) return [];
+  const { data: userRow, error: userError } = await supabase.from("users").select("organization_id").eq("id", user.id).single();
+  if (userError || !userRow) {
+    if (userError) console.error("Business list user lookup failed:", userError.message, { userId: user.id });
+    return [];
+  }
 
-  const { data: businesses } = await supabase
+  const { data: businesses, error: businessesError } = await supabase
     .from("businesses")
     .select("id, name")
     .eq("organization_id", userRow.organization_id)
     .order("created_at", { ascending: true });
 
+  if (businessesError) {
+    console.error("Business list lookup failed:", businessesError.message, { organizationId: userRow.organization_id });
+    return [];
+  }
   return businesses ?? [];
 });

@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { CalendarDays, CalendarClock, ArrowRight } from "lucide-react";
+import { CalendarDays, CalendarClock, ArrowRight, AlertTriangle } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
+import { fetchBookingsForBusiness, type BookingWithLead } from "@/lib/bookings";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -29,27 +31,30 @@ export default async function BookingsPage() {
   const business = await getCurrentBusiness();
   const supabase = createServerSupabaseClient();
 
-  const { data: connection } = await supabase
+  const { data: connection, error: connectionError } = await supabase
     .from("calendar_connections")
     .select("connected_email")
     .eq("business_id", business.id)
     .maybeSingle();
 
-  const { data: bookingRows } = await supabase
-    .from("bookings")
-    .select("id, start_time, end_time, status, lead_id")
-    .eq("business_id", business.id)
-    .order("start_time", { ascending: true });
+  let bookings: BookingWithLead[] = [];
+  let loadError: string | null = connectionError ? "Failed to load calendar connection." : null;
+  if (connectionError) {
+    console.error("Bookings page failed to load calendar connection:", connectionError.message, {
+      businessId: business.id,
+    });
+  }
+  try {
+    bookings = await fetchBookingsForBusiness(supabase, business.id);
+  } catch (err) {
+    console.error("Bookings page failed to load bookings:", err instanceof Error ? err.message : err, {
+      businessId: business.id,
+    });
+    loadError = err instanceof Error ? err.message : "Failed to load bookings.";
+  }
 
-  const leadIds = [...new Set((bookingRows ?? []).map((b) => b.lead_id))];
-  const { data: leadRows } = leadIds.length
-    ? await supabase.from("leads").select("id, name, email").in("id", leadIds)
-    : { data: [] };
-  const leadsById = new Map((leadRows ?? []).map((l) => [l.id, l]));
+  const visibleBookings = bookings.filter((b) => b.status !== "cancelled" && b.status !== "no_show");
 
-  const bookings = (bookingRows ?? [])
-    .map((b) => ({ ...b, lead: leadsById.get(b.lead_id) ?? null }))
-    .filter((b) => b.status !== "cancelled" && b.status !== "no_show");
 
   return (
     <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
@@ -58,14 +63,36 @@ export default async function BookingsPage() {
         title="Appointments"
         description="Every appointment the widget has booked on your calendar, with its current status."
         actions={
-          bookings.length > 0 ? (
-            <Badge variant="neutral">{bookings.length} total</Badge>
+          visibleBookings.length > 0 ? (
+            <Badge variant="neutral">{visibleBookings.length} total</Badge>
           ) : undefined
         }
       />
 
+      {loadError && (
+        <div
+          role="alert"
+          className="mt-6 flex items-start gap-3 rounded-xl border border-alert-500/25 bg-alert-500/10 px-4 py-3 text-sm text-alert-700"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-medium">Couldn't load your bookings</p>
+            <p className="mt-0.5 text-xs leading-relaxed">{loadError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="mt-6">
-        {!connection ? (
+        {connectionError ? (
+          <Card className="mt-2">
+            <CardContent className="px-6 py-8">
+              <p className="text-sm font-medium text-ink-900">Calendar connection unavailable</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink-500">
+                We couldn't determine whether a calendar is connected. Please refresh and try again.
+              </p>
+            </CardContent>
+          </Card>
+        ) : !connection ? (
           <Card className="mt-2">
             <CardContent className="flex flex-col items-start gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
@@ -89,7 +116,7 @@ export default async function BookingsPage() {
               </Link>
             </CardContent>
           </Card>
-        ) : bookings.length === 0 ? (
+        ) : visibleBookings.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
             title="No bookings yet"
@@ -116,7 +143,7 @@ export default async function BookingsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-900/[0.06]">
-                    {bookings.map((b) => {
+                    {visibleBookings.map((b) => {
                       const isUpcoming = new Date(b.start_time).getTime() > Date.now();
                       const statusKey = b.status as keyof typeof statusVariant;
                       return (
@@ -163,7 +190,7 @@ export default async function BookingsPage() {
 
             {/* Mobile list */}
             <ul className="space-y-2 md:hidden">
-              {bookings.map((b) => {
+              {visibleBookings.map((b) => {
                 const statusKey = b.status as keyof typeof statusVariant;
                 const isUpcoming = new Date(b.start_time).getTime() > Date.now();
                 return (

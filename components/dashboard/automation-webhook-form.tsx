@@ -38,6 +38,7 @@ export function AutomationWebhookForm({ businessId, initialUrls }: WebhookFormPr
   const [urls, setUrls] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(initialUrls).map(([k, v]) => [k, v ?? ""]))
   );
+  const [webhookSecret, setWebhookSecret] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
@@ -61,7 +62,11 @@ export function AutomationWebhookForm({ businessId, initialUrls }: WebhookFormPr
       const res = await fetch("/api/v1/automations/webhook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId, webhookUrls }),
+        body: JSON.stringify({
+          businessId,
+          webhookUrls,
+          ...(webhookSecret.trim() ? { webhookSecret: webhookSecret.trim() } : {}),
+        }),
       });
 
       const json = await res.json();
@@ -69,6 +74,7 @@ export function AutomationWebhookForm({ businessId, initialUrls }: WebhookFormPr
 
       if (res.ok) {
         setMessage({ kind: "success", text: "Automation settings saved." });
+        setWebhookSecret("");
       } else {
         setMessage({ kind: "error", text: json.error ?? "Couldn't save — check the URLs are valid." });
       }
@@ -138,6 +144,29 @@ export function AutomationWebhookForm({ businessId, initialUrls }: WebhookFormPr
             </div>
           );
         })}
+      </div>
+
+      <div className="rounded-xl border border-ink-900/[0.08] bg-white p-4">
+        <label htmlFor="automation-webhook-secret" className="text-sm font-medium text-ink-900">
+          Webhook signing secret
+        </label>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink-400">
+          Optional for local testing; required for production. The secret is write-only and is never shown back here.
+          Configure the same value in your n8n deployment.
+        </p>
+        <Input
+          id="automation-webhook-secret"
+          type="password"
+          autoComplete="new-password"
+          placeholder="At least 32 characters"
+          value={webhookSecret}
+          onChange={(e) => {
+            setWebhookSecret(e.target.value);
+            setMessage(null);
+          }}
+          disabled={saving}
+          className="mt-3 font-mono text-xs"
+        />
       </div>
 
       <div className="flex items-center gap-3 pt-2">

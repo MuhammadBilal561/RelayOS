@@ -236,6 +236,23 @@ describe("executeTool: create_booking", () => {
     expect(emitAutomationEvent).not.toHaveBeenCalled();
   });
 
+  it("BOOKING AUTOMATION TEST: never reports booked:true and never emits booking.created when the database insert fails", async () => {
+    h.getLeadByIdMock.mockResolvedValue({ email: "jane@example.com" });
+    vi.mocked(checkAvailability).mockResolvedValue({ connected: true, available: true });
+    vi.mocked(createCalendarEvent).mockResolvedValue("gcal_event_789");
+    h.insertBookingMock.mockRejectedValue(new Error("Failed to insert booking: connection terminated"));
+    h.updateLeadMock.mockResolvedValue(undefined);
+
+    await expect(
+      executeTool("create_booking", { start_iso: "2026-08-03T15:00:00-05:00", summary: "AC repair" }, ctx)
+    ).rejects.toThrow(/Failed to insert booking/);
+
+    // The lead must not be marked booked, and no automation event may fire
+    // for a booking that was never persisted.
+    expect(h.updateLeadMock).not.toHaveBeenCalledWith(ctx.leadId, { status: "booked" });
+    expect(emitAutomationEvent).not.toHaveBeenCalled();
+  });
+
   it("computes end_time from start_iso + duration_minutes", async () => {
     h.getLeadByIdMock.mockResolvedValue({ email: null });
     vi.mocked(createCalendarEvent).mockResolvedValue("gcal_event_456");
