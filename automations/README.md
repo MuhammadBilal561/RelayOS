@@ -48,12 +48,13 @@ n8n hosts or create separate deployments with their own environment variable.
 
 ## Slack and email actions
 
-The Slack URL, Resend authorization value, sender domain, and recipient
-settings in the exports are placeholders. Before activation, replace them
-with n8n credentials or environment-backed values, verify the Slack channel,
-and verify the Resend domain/sender. The booking workflow sends the customer
-email from the `leadEmail` payload field. Never commit real Slack, Resend,
-Google, Supabase, or webhook secrets to workflow JSON.
+The Slack URL, sender domain, and recipient settings in the exports are
+placeholders. Before activation, create an n8n **Header Auth** credential
+named `RelayOS Resend API` with header name `Authorization` and value
+`Bearer <your Resend API key>`. The booking email node is configured to use
+that credential. Replace `bookings@yourdomain.com` with a sender address on a
+domain verified in Resend, then configure Slack. The booking workflow sends
+to `payload.leadEmail`. Never commit real secrets to workflow JSON.
 
 ## Testing
 
@@ -62,3 +63,14 @@ RelayOS webhook URL for local testing. For production, activate the workflow,
 save its Production URL in RelayOS, send a real lead/booking event, and inspect
 the n8n execution. Invalid, missing, or older-than-five-minutes signatures
 must fail at **Verify RelayOS Signature**.
+
+### Simple email setup
+
+1. In n8n, open **Credentials → New → Header Auth**.
+2. Name it `RelayOS Resend API`.
+3. Set header name to `Authorization`.
+4. Set value to `Bearer <your Resend API key>`.
+5. Import the updated booking workflow and select that credential on
+   **Email Booking Confirmation**.
+6. Replace the placeholder sender with your verified Resend sender.
+7. Activate the workflow and create a test booking.

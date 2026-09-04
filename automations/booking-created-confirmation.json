@@ -83,7 +83,9 @@
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "sendHeaders": true,
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": false,
         "headerParameters": {
           "parameters": [
             { "name": "Authorization", "value": "Bearer REPLACE_WITH_RESEND_API_KEY" }
@@ -98,7 +100,12 @@
       "name": "Email Booking Confirmation",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [900, 460]
+      "position": [900, 460],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "RelayOS Resend API"
+        }
+      }
     }
   ],
   "connections": {
