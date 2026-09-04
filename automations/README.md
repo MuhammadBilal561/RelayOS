@@ -28,9 +28,10 @@ These three exports are event-specific workflows:
 5. Keep each Webhook node's **Raw Body** option enabled. The verifier signs the
    exact compact JSON body sent by RelayOS, not a re-serialized `$json` object.
 
-The verifier reads the Webhook node output (`headers`, `rawBody`, and `body`).
-The Webhook node's **Raw Body** option is mandatory; if n8n does not provide a
-string `rawBody`, verification must fail rather than serializing `body`. The
+The verifier reads headers from `item.json.headers` and the exact raw request
+bytes from `item.binary.data.data` (base64 decoded). The Webhook node's **Raw
+Body** option is mandatory; if n8n does not provide that binary field,
+verification fails rather than serializing `body`. The
 verifier checks the `v1=` HMAC-SHA256 signature and enforces a five-minute
 timestamp window. RelayOS signs:
 
