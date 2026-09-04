@@ -19,15 +19,20 @@ These three exports are event-specific workflows:
    in RelayOS. The field is write-only; do not paste the secret into a workflow
    export or commit it to this repository.
 4. Set the same value as `RELAYOS_WEBHOOK_SECRET` in the n8n host environment.
-   With Docker Compose, put it in the host's `.env` file (not `.env.local`),
-   then restart n8n. The compose file also enables the `crypto` built-in for
-   the verification Code node.
+   With Docker Compose, create a `.env` file beside `docker-compose.yml`, add
+   `RELAYOS_WEBHOOK_SECRET=<random-32-byte-value>`, and run `docker compose up -d`
+   again. Do not put the value in a workflow field or JSON export. The verifier
+   reads it through n8n's supported `$env` Code-node variable; do not use
+   `$request` or `$credentials` in the Code node. The compose file also enables
+   the `crypto` built-in.
 5. Keep each Webhook node's **Raw Body** option enabled. The verifier signs the
    exact compact JSON body sent by RelayOS, not a re-serialized `$json` object.
 
-The verifier reads the Webhook node output (`headers`, `rawBody`, and `body`),
-checks the `v1=` HMAC-SHA256 signature, and enforces a five-minute timestamp
-window. RelayOS signs:
+The verifier reads the Webhook node output (`headers`, `rawBody`, and `body`).
+The Webhook node's **Raw Body** option is mandatory; if n8n does not provide a
+string `rawBody`, verification must fail rather than serializing `body`. The
+verifier checks the `v1=` HMAC-SHA256 signature and enforces a five-minute
+timestamp window. RelayOS signs:
 
 ```text
 timestamp + "." + nonce + "." + raw request body

@@ -3,6 +3,17 @@
   "nodes": [
     {
       "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input = $input.first().json;\nif (typeof input.rawBody !== \"string\" || !input.rawBody) {\n  throw new Error(\"Webhook Raw Body is missing\");\n}\nreturn items;"
+      },
+      "id": "require_raw_body",
+      "name": "Require Raw Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [370, 300]
+    },
+    {
+      "parameters": {
         "httpMethod": "POST",
         "path": "relay-lead-qualified",
         "responseMode": "onReceived",
@@ -22,7 +33,7 @@
         "options": {}
       },
       "id": "verify_signature",
-      "name": "Verify RelayOS Signature",
+      "name": "Verify RelayOS Signature (n8n)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [480, 300]
@@ -65,9 +76,12 @@
   ],
   "connections": {
     "RelayOS Webhook": {
-      "main": [[{ "node": "Verify RelayOS Signature", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Require Raw Body", "type": "main", "index": 0 }]]
     },
-    "Verify RelayOS Signature": {
+    "Require Raw Body": {
+      "main": [[{ "node": "Verify RelayOS Signature (n8n)", "type": "main", "index": 0 }]]
+    },
+    "Verify RelayOS Signature (n8n)": {
       "main": [[{ "node": "Format Slack Message", "type": "main", "index": 0 }]]
     },
     "Format Slack Message": {
