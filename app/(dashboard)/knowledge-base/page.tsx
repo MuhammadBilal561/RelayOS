@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BookOpen, FileText, Layers } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { KnowledgeBaseUploader } from "@/components/dashboard/kb-uploader";
@@ -45,22 +44,20 @@ export default async function KnowledgeBasePage() {
         description="Anything you add here gets embedded and used to ground the widget's answers — it will not invent prices or policies that aren't listed below."
       />
 
-      <Card className="mt-6">
-        <CardHeader>
-          <div>
-            <CardTitle>Add a document</CardTitle>
-            <CardDescription>
-              The content is chunked, embedded, and indexed so answers stay grounded in your actual business data.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <div className="p-5 pt-4">
+      <div className="mt-7 overflow-hidden rounded-2xl border border-ink-900/8 bg-[#fffdf8] shadow-[0_18px_40px_-24px_rgba(55,40,18,0.28)]">
+        <div className="border-b border-ink-900/8 bg-ink-950 px-5 py-5 text-white sm:px-6">
+          <h2 className="font-display text-lg font-semibold tracking-tight">Add a document</h2>
+          <p className="mt-1 text-sm text-white/55">
+            The content is chunked, embedded, and indexed so answers stay grounded in your actual business data.
+          </p>
+        </div>
+        <div className="p-5 sm:p-6">
           <KnowledgeBaseUploader businessId={business.id} />
         </div>
-      </Card>
+      </div>
 
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="font-display text-sm font-semibold tracking-tight text-ink-950">
+        <h2 className="font-display text-base font-semibold tracking-tight text-ink-950">
           Documents{" "}
           {docs.length > 0 && (
             <span className="ml-1 font-mono text-xs font-normal text-ink-400">{docs.length}</span>
@@ -76,21 +73,21 @@ export default async function KnowledgeBasePage() {
           description="Add your pricing, services, and policies above. Until then, the widget answers from general knowledge only."
         />
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-3">
           {docs.map((doc) => (
             <li key={doc.id}>
-              <div className="surface p-4 transition-shadow duration-150 hover:shadow-panel-hover">
+              <div className="surface p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-signal-500/10 text-signal-700">
+                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink-950 text-signal-400">
                       <BookOpen className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-ink-900">{doc.title}</p>
-                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-400">
+                      <p className="truncate font-display text-sm font-semibold text-ink-950">{doc.title}</p>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-500">
                         {doc.content_text}
                       </p>
-                      <p className="mt-2 font-mono text-[10px] text-ink-300">
+                      <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-ink-400">
                         added {formatDate(doc.created_at)}
                       </p>
                     </div>
@@ -116,7 +113,7 @@ export default async function KnowledgeBasePage() {
 
       <p className="mt-6 text-xs text-ink-400">
         Want to test it?{" "}
-        <Link href="/widget/demo-widget-key" target="_blank" className="font-medium text-signal-600 hover:text-signal-700">
+        <Link href="/widget/demo-widget-key" target="_blank" className="font-medium text-signal-700 hover:text-signal-600">
           Open the live widget
         </Link>{" "}
         and ask a question about what you just added.

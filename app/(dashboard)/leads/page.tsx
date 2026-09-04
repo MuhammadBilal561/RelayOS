@@ -10,13 +10,13 @@ import { PageShell } from "@/components/dashboard/page-shell";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const columns: { status: LeadStatus; label: string }[] = [
-  { status: "new", label: "New" },
-  { status: "qualified", label: "Qualified" },
-  { status: "booked", label: "Booked" },
-  { status: "escalated", label: "Escalated" },
-  { status: "nurturing", label: "Nurturing" },
-  { status: "lost", label: "Lost" },
+const columns: { status: LeadStatus; label: string; hint: string }[] = [
+  { status: "new", label: "New", hint: "Just arrived" },
+  { status: "qualified", label: "Qualified", hint: "Ready to book" },
+  { status: "booked", label: "Booked", hint: "On the calendar" },
+  { status: "escalated", label: "Escalated", hint: "Needs a human" },
+  { status: "nurturing", label: "Nurturing", hint: "Follow-up" },
+  { status: "lost", label: "Lost", hint: "Closed out" },
 ];
 
 function scoreVariant(score: number) {
@@ -31,13 +31,13 @@ const scoreBar = {
   neutral: "bg-ink-300",
 };
 
-const columnAccent: Record<LeadStatus, string> = {
-  new: "bg-ink-400",
-  qualified: "bg-signal-500",
-  booked: "bg-relay-500",
-  escalated: "bg-alert-500",
-  nurturing: "bg-ink-300",
-  lost: "bg-ink-300",
+const columnTone: Record<LeadStatus, string> = {
+  new: "bg-ink-950 text-white",
+  qualified: "bg-[#e8f7ee] text-ink-950",
+  booked: "bg-signal-500 text-ink-950",
+  escalated: "bg-[#fdecec] text-ink-950",
+  nurturing: "bg-[#fffdf8] text-ink-950",
+  lost: "bg-[#f3eee4] text-ink-700",
 };
 
 export default async function LeadsPage() {
@@ -74,18 +74,19 @@ export default async function LeadsPage() {
       <SectionHeader
         eyebrow="Leads"
         title="Pipeline"
-        description="Ranked by lead score — a deterministic blend of contact info captured, urgency language detected, and engagement depth. Recalculated after every message, not an LLM self-report."
+        description="Ranked by lead score — a deterministic blend of contact info captured, urgency language detected, and engagement depth. Recalculated after every message."
+        actions={hasAnyLeads ? <Badge variant="neutral">{leads?.length} leads</Badge> : undefined}
       />
 
-      <div className="mt-6">
+      <div className="mt-7">
         {!hasAnyLeads ? (
           <EmptyState
             icon={Users}
             title="No leads yet"
             description="Leads appear here the moment a visitor shares contact info through your widget. Open the live preview and say hello to see the pipeline fill up."
             action={
-              <Link href="/widget/demo-widget-key" target="_blank" className="text-sm font-medium text-signal-600 hover:text-signal-700">
-                Try the live widget →
+              <Link href="/widget/demo-widget-key" target="_blank" className="text-sm font-medium text-signal-700 hover:text-signal-600">
+                Try the live widget
               </Link>
             }
           />
@@ -100,15 +101,15 @@ export default async function LeadsPage() {
               {columns.map((col) => {
                 const columnLeads = (leads ?? []).filter((l) => l.status === col.status);
                 return (
-                  <div key={col.status} className="w-[220px]">
-                    <div className="mb-2.5 flex items-center justify-between px-1">
-                      <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-ink-500">
-                        <span className={cn("h-1.5 w-1.5 rounded-full", columnAccent[col.status])} aria-hidden="true" />
-                        {col.label}
-                      </p>
-                      <span className="rounded-full bg-ink-900/[0.06] px-2 py-0.5 font-mono text-[10px] text-ink-500">
-                        {columnLeads.length}
-                      </span>
+                  <div key={col.status} className="w-[232px]">
+                    <div className={cn("mb-3 rounded-2xl px-3.5 py-3", columnTone[col.status])}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[13px] font-semibold">{col.label}</p>
+                        <span className="rounded-full bg-black/10 px-2 py-0.5 font-mono text-[10px]">
+                          {columnLeads.length}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[11px] opacity-65">{col.hint}</p>
                     </div>
 
                     <div className="space-y-2">
@@ -116,9 +117,9 @@ export default async function LeadsPage() {
                         const conversationId = latestConversationByLead.get(lead.id);
                         const tone = scoreVariant(lead.score);
                         const card = (
-                          <div className="group rounded-xl border border-ink-900/[0.07] bg-white p-3 shadow-panel transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-900/[0.12] hover:shadow-panel-hover">
+                          <div className="group rounded-2xl border border-ink-900/8 bg-[#fffdf8] p-3.5 shadow-[0_14px_30px_-22px_rgba(55,40,18,0.4)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-20px_rgba(55,40,18,0.5)]">
                             <div className="flex items-start justify-between gap-2">
-                              <p className="truncate text-sm font-medium text-ink-900">
+                              <p className="truncate font-display text-sm font-semibold text-ink-950">
                                 {lead.name || lead.email || "Anonymous visitor"}
                               </p>
                               <Badge variant={tone} className="shrink-0">
@@ -126,22 +127,21 @@ export default async function LeadsPage() {
                               </Badge>
                             </div>
                             {lead.service_interest && (
-                              <p className="mt-1 truncate text-xs text-ink-400">{lead.service_interest}</p>
+                              <p className="mt-1 truncate text-xs text-ink-500">{lead.service_interest}</p>
                             )}
 
-                            <div className="mt-2.5 flex items-center gap-2">
-                              <div className="h-1 w-full overflow-hidden rounded-full bg-paper-100" aria-hidden="true">
+                            <div className="mt-3 flex items-center gap-2">
+                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#efe8dc]" aria-hidden="true">
                                 <div
                                   className={cn("h-full rounded-full", scoreBar[tone])}
                                   style={{ width: `${Math.min(100, lead.score)}%` }}
                                 />
                               </div>
-                              <span className="shrink-0 font-mono text-[9px] uppercase tracking-wide text-ink-300">
-                                score
-                              </span>
                             </div>
 
-                            <p className="mt-2 font-mono text-[10px] text-ink-300">{formatDate(lead.created_at)}</p>
+                            <p className="mt-2.5 text-[11px] font-medium uppercase tracking-wide text-ink-400">
+                              {formatDate(lead.created_at)}
+                            </p>
                           </div>
                         );
                         return conversationId ? (

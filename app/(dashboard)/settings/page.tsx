@@ -12,7 +12,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
 import { isMissingColumnError, resolveAutomationWebhookUrls } from "@/lib/automation-webhooks";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AutomationWebhookForm } from "@/components/dashboard/automation-webhook-form";
@@ -38,18 +37,18 @@ function SettingsSection({
 }) {
   return (
     <section id={id} className="scroll-mt-20 md:scroll-mt-8">
-      <div className="mb-3 flex items-start gap-3">
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-900/[0.06] text-ink-500 ring-1 ring-ink-900/[0.04]">
-          <Icon className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <div>
-          <h2 className="font-display text-sm font-semibold tracking-tight text-ink-950">{title}</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-ink-400">{description}</p>
+      <div className="mb-6 overflow-hidden rounded-2xl border border-ink-900/8 bg-[#fffdf8] shadow-[0_18px_40px_-24px_rgba(55,40,18,0.28)]">
+        <div className="flex items-start gap-3 border-b border-ink-900/8 px-5 py-4">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-950 text-signal-400">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="font-display text-base font-semibold tracking-tight text-ink-950">{title}</h2>
+            <p className="mt-0.5 text-sm leading-relaxed text-ink-500">{description}</p>
+          </div>
         </div>
+        <div className="p-5">{children}</div>
       </div>
-      <Card className="mb-6">
-        <CardContent>{children}</CardContent>
-      </Card>
     </section>
   );
 }
@@ -138,7 +137,7 @@ export default async function SettingsPage({
       {searchParams.calendar_connected && (
         <p
           role="status"
-          className="mt-6 flex items-center gap-2 rounded-xl border border-relay-500/20 bg-relay-500/10 px-3.5 py-2.5 text-sm text-relay-700"
+          className="mt-6 flex items-center gap-2 rounded-2xl border border-relay-500/15 bg-[#e8f7ee] px-4 py-3 text-sm text-relay-700"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           Google Calendar connected — the widget can now check availability and book appointments.
@@ -147,7 +146,7 @@ export default async function SettingsPage({
       {searchParams.calendar_error && (
         <p
           role="alert"
-          className="mt-6 flex items-center gap-2 rounded-xl border border-alert-500/20 bg-alert-500/10 px-3.5 py-2.5 text-sm text-alert-700"
+          className="mt-6 flex items-center gap-2 rounded-2xl border border-alert-500/15 bg-[#fdecec] px-4 py-3 text-sm text-alert-700"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           {searchParams.calendar_error}
@@ -156,7 +155,7 @@ export default async function SettingsPage({
       {businessDetailsError && (
         <p
           role="alert"
-          className="mt-6 rounded-xl border border-alert-500/20 bg-alert-500/10 px-3.5 py-2.5 text-sm text-alert-700"
+          className="mt-6 rounded-2xl border border-alert-500/15 bg-[#fdecec] px-4 py-3 text-sm text-alert-700"
         >
           {businessDetailsError} Please refresh and try again.
         </p>
@@ -164,7 +163,7 @@ export default async function SettingsPage({
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[190px_1fr]">
         <aside className="sticky top-8 hidden lg:block">
-          <p className="mb-2 px-3 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-300">
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
             Settings
           </p>
           <SettingsNav />

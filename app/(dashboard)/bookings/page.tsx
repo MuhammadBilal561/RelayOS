@@ -4,7 +4,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
 import { fetchBookingsForBusiness, type BookingWithLead } from "@/lib/bookings";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -56,7 +55,6 @@ export default async function BookingsPage() {
 
   const visibleBookings = bookings.filter((b) => b.status !== "cancelled" && b.status !== "no_show");
 
-
   return (
     <PageShell>
       <SectionHeader
@@ -73,144 +71,80 @@ export default async function BookingsPage() {
       {loadError && (
         <div
           role="alert"
-          className="mt-6 flex items-start gap-3 rounded-xl border border-alert-500/25 bg-alert-500/10 px-4 py-3 text-sm text-alert-700"
+          className="mt-6 flex items-start gap-3 rounded-2xl border border-alert-500/20 bg-[#fdecec] px-4 py-3.5 text-sm text-alert-700"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-medium">Couldn't load your bookings</p>
+            <p className="font-medium">Couldn&apos;t load your bookings</p>
             <p className="mt-0.5 text-xs leading-relaxed">{loadError}</p>
           </div>
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-7">
         {connectionError ? (
-          <Card className="mt-2">
-            <CardContent className="px-6 py-8">
-              <p className="text-sm font-medium text-ink-900">Calendar connection unavailable</p>
-              <p className="mt-1 text-sm leading-relaxed text-ink-500">
-                We couldn't determine whether a calendar is connected. Please refresh and try again.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="surface p-6">
+            <p className="font-display text-base font-semibold text-ink-950">Calendar connection unavailable</p>
+            <p className="mt-1 text-sm leading-relaxed text-ink-500">
+              We couldn&apos;t determine whether a calendar is connected. Please refresh and try again.
+            </p>
+          </div>
         ) : !connection ? (
-          <Card className="mt-2">
-            <CardContent className="flex flex-col items-start gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-signal-500/10 text-signal-700">
-                  <CalendarClock className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="font-display text-sm font-semibold tracking-tight text-ink-950">
-                    No calendar connected yet
-                  </p>
-                  <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-500">
-                    Connect Google Calendar so the AI can check real availability and book
-                    appointments automatically.
-                  </p>
-                </div>
+          <div className="flex flex-col items-start gap-5 overflow-hidden rounded-2xl bg-ink-950 p-6 text-white shadow-[0_24px_50px_-28px_rgba(17,27,35,0.7)] sm:flex-row sm:items-center sm:justify-between sm:p-7">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-signal-400">
+                <CalendarClock className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-display text-lg font-semibold tracking-tight">No calendar connected yet</p>
+                <p className="mt-1 max-w-md text-sm leading-relaxed text-white/60">
+                  Connect Google Calendar so the AI can check real availability and book appointments automatically.
+                </p>
               </div>
-              <Link href="/settings#calendar">
-                <Button variant="signal" size="sm">
-                  Connect Google Calendar
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+            </div>
+            <Link href="/settings#calendar">
+              <Button variant="signal" size="sm">
+                Connect Google Calendar
+              </Button>
+            </Link>
+          </div>
         ) : visibleBookings.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
             title="No bookings yet"
-            description="Once the widget books an appointment on your calendar, it'll show up here immediately — confirmed slots appear first, then completed ones."
+            description="Once the widget books an appointment on your calendar, it&apos;ll show up here immediately — confirmed slots appear first, then completed ones."
           />
         ) : (
-          <>
-            <div className="surface hidden overflow-hidden md:block">
-              <div className="overflow-x-auto scroll-thin" role="region" aria-label="Bookings table" tabIndex={0}>
-                <table className="dash-table w-full min-w-[600px] text-left">
-                  <thead>
-                    <tr className="border-b border-ink-900/[0.07]">
-                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
-                        Lead
-                      </th>
-                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
-                        Date & time
-                      </th>
-                      <th scope="col" className="px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-400">
-                        Status
-                      </th>
-                      <th scope="col" className="w-8 px-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ink-900/[0.05]">
-                    {visibleBookings.map((b) => {
-                      const isUpcoming = new Date(b.start_time).getTime() > Date.now();
-                      const statusKey = b.status as keyof typeof statusVariant;
-                      return (
-                        <tr
-                          key={b.id}
-                          className={cn(
-                            "group",
-                            !isUpcoming && "opacity-70"
-                          )}
-                        >
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-3">
-                              <Avatar name={b.lead?.name ?? b.lead?.email} />
-                              <span className="text-sm font-medium text-ink-900">
-                                {b.lead?.name || b.lead?.email || "Lead"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-3.5">
-                            <p className="text-sm font-medium text-ink-900">{formatDateTime(b.start_time)}</p>
-                            <p className="mt-0.5 font-mono text-[10px] text-ink-300">
-                              {isUpcoming ? `in ${formatRelativeTime(b.start_time)}` : "completed"}
-                            </p>
-                          </td>
-                          <td className="whitespace-nowrap px-5 py-3.5">
-                            <Badge
-                              variant={statusVariant[statusKey] ?? "neutral"}
-                              dot
-                              dotTone={statusTone[statusKey] ?? "idle"}
-                            >
-                              {b.status}
-                            </Badge>
-                          </td>
-                          <td className="px-3">
-                            <ArrowRight className="h-4 w-4 text-ink-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-signal-600" />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <ul className="space-y-2 md:hidden">
-              {visibleBookings.map((b) => {
-                const statusKey = b.status as keyof typeof statusVariant;
-                const isUpcoming = new Date(b.start_time).getTime() > Date.now();
-                return (
-                  <li key={b.id} className={cn(!isUpcoming && "opacity-70")}>
-                    <div className="surface flex items-center gap-3 p-3.5">
-                      <Avatar name={b.lead?.name ?? b.lead?.email} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-ink-900">
-                          {b.lead?.name || b.lead?.email || "Lead"}
-                        </p>
-                        <p className="mt-0.5 font-mono text-[11px] text-ink-400">{formatDateTime(b.start_time)}</p>
-                      </div>
-                      <Badge variant={statusVariant[statusKey] ?? "neutral"} dot dotTone={statusTone[statusKey] ?? "idle"}>
-                        {b.status}
-                      </Badge>
+          <ul className="space-y-3">
+            {visibleBookings.map((b) => {
+              const statusKey = b.status as keyof typeof statusVariant;
+              const isUpcoming = new Date(b.start_time).getTime() > Date.now();
+              return (
+                <li key={b.id} className={cn(!isUpcoming && "opacity-70")}>
+                  <div className="surface flex items-center gap-4 p-4">
+                    <Avatar name={b.lead?.name ?? b.lead?.email} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-[15px] font-semibold text-ink-950">
+                        {b.lead?.name || b.lead?.email || "Lead"}
+                      </p>
+                      <p className="mt-1 text-sm text-ink-500">{formatDateTime(b.start_time)}</p>
+                      <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-ink-400">
+                        {isUpcoming ? `in ${formatRelativeTime(b.start_time)}` : "completed"}
+                      </p>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+                    <Badge
+                      variant={statusVariant[statusKey] ?? "neutral"}
+                      dot
+                      dotTone={statusTone[statusKey] ?? "idle"}
+                    >
+                      {b.status}
+                    </Badge>
+                    <ArrowRight className="hidden h-4 w-4 shrink-0 text-ink-300 sm:block" aria-hidden="true" />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     </PageShell>

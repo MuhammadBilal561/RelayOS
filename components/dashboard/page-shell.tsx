@@ -15,7 +15,7 @@ const widthClass = {
 
 export function PageShell({ children, className, width = "default" }: PageShellProps) {
   return (
-    <div className={cn("mx-auto w-full px-5 py-6 sm:px-7 sm:py-8 lg:px-8 lg:py-9", widthClass[width], className)}>
+    <div className={cn("mx-auto w-full px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10", widthClass[width], className)}>
       {children}
     </div>
   );

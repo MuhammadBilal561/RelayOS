@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/current-business";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/dashboard/section-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
@@ -71,18 +70,21 @@ const quickActions = [
   {
     href: "/knowledge-base",
     icon: BookOpen,
+    step: "01",
     title: "Teach the AI",
     description: "Add pricing and policies to ground every answer.",
   },
   {
     href: "/settings#calendar",
     icon: CalendarDays,
+    step: "02",
     title: "Connect your calendar",
     description: "Let the widget check availability and book.",
   },
   {
     href: "/analytics",
     icon: LineChart,
+    step: "03",
     title: "See revenue recovered",
     description: "Live funnel, response time, and conversion.",
   },
@@ -105,8 +107,8 @@ export default async function OverviewPage() {
         }
       />
 
-      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KpiCard label="Conversations" value={kpis.conversations} icon={MessageSquare} />
+      <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <KpiCard label="Conversations" value={kpis.conversations} icon={MessageSquare} tone="signal" />
         <KpiCard label="Total leads" value={kpis.totalLeads} icon={Users} />
         <KpiCard
           label="Qualified"
@@ -115,69 +117,60 @@ export default async function OverviewPage() {
           tone="relay"
           hint={`${kpis.bookedLeads} booked`}
         />
-        <KpiCard label="Avg lead score" value={kpis.avgScore} icon={Gauge} tone="signal" />
+        <KpiCard label="Avg lead score" value={kpis.avgScore} icon={Gauge} />
         <KpiCard label="Escalated" value={kpis.escalated} icon={AlertTriangle} tone="alert" />
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div>
-              <CardTitle>Revenue-recovery analytics</CardTitle>
-              <CardDescription>
-                Response-time trends, the conversion funnel, and the revenue recovered number live on
-                the Analytics page.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Link
-              href="/analytics"
-              className="group inline-flex items-center gap-1.5 rounded-lg bg-ink-950 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-ink-800"
-            >
-              Open analytics
-              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-2xl bg-ink-950 p-6 text-white shadow-[0_24px_50px_-28px_rgba(17,27,35,0.7)] sm:p-7">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">Analytics</p>
+          <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">Revenue recovery</h2>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">
+            Response-time trends, the conversion funnel, and the revenue recovered number live on the Analytics page.
+          </p>
+          <Link
+            href="/analytics"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-signal-500 px-4 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-signal-400"
+          >
+            Open analytics
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle>Set up in minutes</CardTitle>
-              <CardDescription>Three steps to a live front office.</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-0.5">
+        <div className="surface p-5 sm:p-6">
+          <div className="mb-4">
+            <h2 className="font-display text-base font-semibold tracking-tight text-ink-950">Set up in minutes</h2>
+            <p className="mt-1 text-sm text-ink-500">Three steps to a live front office.</p>
+          </div>
+          <div className="space-y-2">
             {quickActions.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
-                className="group -mx-2 flex items-start gap-3 rounded-lg px-2 py-2.5 transition-colors duration-150 hover:bg-paper-50"
+                className="group flex items-start gap-3 rounded-xl border border-ink-900/6 bg-[#faf6ef] px-3 py-3 transition-colors hover:border-ink-900/12 hover:bg-white"
               >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink-900/[0.06] text-ink-500 transition-colors duration-150 group-hover:bg-signal-500/10 group-hover:text-signal-700">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-950 text-signal-400">
                   <action.icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium text-ink-900">{action.title}</span>
-                  <span className="mt-0.5 block text-xs leading-relaxed text-ink-400">
-                    {action.description}
+                  <span className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] text-ink-400">{action.step}</span>
+                    <span className="text-sm font-semibold text-ink-900">{action.title}</span>
                   </span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-ink-500">{action.description}</span>
                 </span>
               </Link>
             ))}
-          </CardContent>
-          <CardFooter className="justify-start">
-            <Link
-              href={`/widget/${business.public_widget_key}`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-500 transition-colors hover:text-ink-900"
-            >
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              Open live widget preview
-            </Link>
-          </CardFooter>
-        </Card>
+          </div>
+          <Link
+            href={`/widget/${business.public_widget_key}`}
+            target="_blank"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-ink-500 transition-colors hover:text-ink-900"
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            Open live widget preview
+          </Link>
+        </div>
       </div>
     </PageShell>
   );

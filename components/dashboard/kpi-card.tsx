@@ -9,11 +9,35 @@ interface KpiCardProps extends React.HTMLAttributes<HTMLDivElement> {
   tone?: "neutral" | "signal" | "relay" | "alert";
 }
 
-const toneStyles: Record<string, { icon: string; container: string; accent: string }> = {
-  neutral: { icon: "text-ink-600", container: "bg-ink-900/[0.06]", accent: "text-ink-400" },
-  signal: { icon: "text-signal-700", container: "bg-signal-500/12", accent: "text-signal-500" },
-  relay: { icon: "text-relay-700", container: "bg-relay-500/12", accent: "text-relay-500" },
-  alert: { icon: "text-alert-700", container: "bg-alert-500/12", accent: "text-alert-500" },
+const toneStyles: Record<string, { wrap: string; icon: string; label: string; value: string; hint: string }> = {
+  neutral: {
+    wrap: "bg-[#fffdf8] border-ink-900/10",
+    icon: "bg-ink-900/[0.06] text-ink-700",
+    label: "text-ink-500",
+    value: "text-ink-950",
+    hint: "text-ink-400",
+  },
+  signal: {
+    wrap: "bg-[#171b23] border-transparent",
+    icon: "bg-white/10 text-signal-400",
+    label: "text-white/55",
+    value: "text-white",
+    hint: "text-white/45",
+  },
+  relay: {
+    wrap: "bg-[#e8f7ee] border-relay-500/15",
+    icon: "bg-relay-500/15 text-relay-700",
+    label: "text-relay-700/80",
+    value: "text-ink-950",
+    hint: "text-relay-700/70",
+  },
+  alert: {
+    wrap: "bg-[#fdecec] border-alert-500/15",
+    icon: "bg-alert-500/15 text-alert-700",
+    label: "text-alert-700/80",
+    value: "text-ink-950",
+    hint: "text-alert-700/70",
+  },
 };
 
 export function KpiCard({ label, value, hint, icon: Icon, tone = "neutral", className, ...props }: KpiCardProps) {
@@ -21,28 +45,22 @@ export function KpiCard({ label, value, hint, icon: Icon, tone = "neutral", clas
   return (
     <div
       className={cn(
-        "dash-kpi surface p-4 transition-shadow duration-200 hover:shadow-panel-hover",
-        styles.accent,
+        "rounded-2xl border p-5 shadow-[0_14px_30px_-22px_rgba(55,40,18,0.45)]",
+        styles.wrap,
         className
       )}
       {...props}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-ink-500">{label}</p>
+        <p className={cn("text-[11px] font-semibold uppercase tracking-[0.14em]", styles.label)}>{label}</p>
         {Icon && (
-          <span
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-              styles.container,
-              styles.icon
-            )}
-          >
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", styles.icon)}>
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </span>
         )}
       </div>
-      <p className="mt-3 font-display text-[1.65rem] font-semibold tracking-tight text-ink-950">{value}</p>
-      {hint && <p className="mt-1.5 truncate text-[11px] text-ink-400">{hint}</p>}
+      <p className={cn("mt-4 font-display text-3xl font-semibold tracking-tight", styles.value)}>{value}</p>
+      {hint && <p className={cn("mt-2 truncate text-[12px]", styles.hint)}>{hint}</p>}
     </div>
   );
 }
